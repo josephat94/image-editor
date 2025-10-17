@@ -13,7 +13,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "fabric": "^5.3.0",
-    "lucide-react": "^0.263.1",
+    "lucide-react": "^0.460.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "tailwind-merge": "^2.0.0"
