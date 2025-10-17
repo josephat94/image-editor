@@ -10,6 +10,8 @@ import {
   Square,
   Circle,
   Eye,
+  Copy,
+  Check,
 } from "lucide-react";
 
 const ImageEditor: React.FC = () => {
@@ -24,6 +26,7 @@ const ImageEditor: React.FC = () => {
     addBlurBox,
     clearCanvas,
     downloadImage,
+    copyToClipboard,
     currentFont,
     setCurrentFont,
     currentColor,
@@ -31,6 +34,7 @@ const ImageEditor: React.FC = () => {
   } = useCanvas();
   const [textInput, setTextInput] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Manejar pegar imagen con Cmd+V
   useEffect(() => {
@@ -78,6 +82,17 @@ const ImageEditor: React.FC = () => {
       addText(textInput);
       setTextInput("");
       setShowTextInput(false);
+    }
+  };
+
+  const handleCopyToClipboard = async () => {
+    const success = await copyToClipboard();
+    if (success) {
+      setCopied(true);
+      // Resetear el estado después de 2 segundos
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
     }
   };
 
@@ -221,6 +236,24 @@ const ImageEditor: React.FC = () => {
               <Button onClick={clearCanvas} variant="outline">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Limpiar
+              </Button>
+
+              <Button 
+                onClick={handleCopyToClipboard} 
+                variant={copied ? "secondary" : "default"}
+                disabled={copied}
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    ¡Copiado!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copiar
+                  </>
+                )}
               </Button>
 
               <Button onClick={downloadImage} variant="default">

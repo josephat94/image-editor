@@ -409,6 +409,34 @@ export const useCanvas = () => {
     link.click();
   };
 
+  const copyToClipboard = async () => {
+    if (!fabricCanvasRef.current) return;
+
+    try {
+      // Obtener el canvas como blob
+      const dataURL = fabricCanvasRef.current.toDataURL({
+        format: "png",
+        quality: 1,
+      });
+
+      // Convertir dataURL a blob
+      const response = await fetch(dataURL);
+      const blob = await response.blob();
+
+      // Copiar al portapapeles usando la API de Clipboard
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "image/png": blob,
+        }),
+      ]);
+
+      return true; // Éxito
+    } catch (error) {
+      console.error("Error al copiar al portapapeles:", error);
+      return false; // Error
+    }
+  };
+
   return {
     canvasRef,
     fabricCanvas: fabricCanvasRef.current,
@@ -421,6 +449,7 @@ export const useCanvas = () => {
     addBlurBox,
     clearCanvas,
     downloadImage,
+    copyToClipboard,
     currentFont,
     setCurrentFont,
     currentColor,
