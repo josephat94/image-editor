@@ -1,13 +1,13 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface TooltipProps {
-  children: React.ReactNode
-  content: string
+  children: React.ReactNode;
+  content: string;
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({ children, content }) => {
-  const [isVisible, setIsVisible] = React.useState(false)
+  const [isVisible, setIsVisible] = React.useState(false);
 
   return (
     <div className="relative inline-block">
@@ -33,6 +33,5 @@ export const Tooltip: React.FC<TooltipProps> = ({ children, content }) => {
         </div>
       )}
     </div>
-  )
-}
-
+  );
+};

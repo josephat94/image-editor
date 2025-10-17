@@ -110,7 +110,13 @@ const ImageEditor: React.FC = () => {
         return;
       }
 
-      if (e.key.toLowerCase() === "t" && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+      if (
+        e.key.toLowerCase() === "t" &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.shiftKey &&
+        !e.altKey
+      ) {
         e.preventDefault();
         setShowTextInput(true);
       }

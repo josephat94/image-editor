@@ -441,10 +441,49 @@ export const useCanvas = () => {
   const downloadImage = () => {
     if (!fabricCanvasRef.current) return;
 
-    const dataURL = fabricCanvasRef.current.toDataURL({
-      format: "png",
-      quality: 1,
-    });
+    const canvas = fabricCanvasRef.current;
+    const objects = canvas.getObjects();
+
+    let dataURL: string;
+
+    if (objects.length === 0) {
+      // Si no hay objetos, descargar el canvas completo
+      dataURL = canvas.toDataURL({
+        format: "png",
+        quality: 1,
+      });
+    } else {
+      // Calcular el bounding box de todos los objetos
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      objects.forEach((obj) => {
+        const bound = obj.getBoundingRect();
+        minX = Math.min(minX, bound.left);
+        minY = Math.min(minY, bound.top);
+        maxX = Math.max(maxX, bound.left + bound.width);
+        maxY = Math.max(maxY, bound.top + bound.height);
+      });
+
+      // Agregar un pequeño padding
+      const padding = 10;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = Math.min(canvas.width!, maxX + padding);
+      maxY = Math.min(canvas.height!, maxY + padding);
+
+      // Exportar solo el área con contenido
+      dataURL = canvas.toDataURL({
+        format: "png",
+        quality: 1,
+        left: minX,
+        top: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+      });
+    }
 
     const link = document.createElement("a");
     link.download = "edited-image.png";
@@ -456,10 +495,55 @@ export const useCanvas = () => {
     if (!fabricCanvasRef.current) return;
 
     try {
-      // Obtener el canvas como blob
-      const dataURL = fabricCanvasRef.current.toDataURL({
+      const canvas = fabricCanvasRef.current;
+      
+      // Calcular el área ocupada por los objetos
+      const objects = canvas.getObjects();
+      if (objects.length === 0) {
+        // Si no hay objetos, copiar el canvas completo
+        const dataURL = canvas.toDataURL({
+          format: "png",
+          quality: 1,
+        });
+        const response = await fetch(dataURL);
+        const blob = await response.blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": blob,
+          }),
+        ]);
+        return true;
+      }
+
+      // Calcular el bounding box de todos los objetos
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      objects.forEach((obj) => {
+        const bound = obj.getBoundingRect();
+        minX = Math.min(minX, bound.left);
+        minY = Math.min(minY, bound.top);
+        maxX = Math.max(maxX, bound.left + bound.width);
+        maxY = Math.max(maxY, bound.top + bound.height);
+      });
+
+      // Agregar un pequeño padding
+      const padding = 10;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = Math.min(canvas.width!, maxX + padding);
+      maxY = Math.min(canvas.height!, maxY + padding);
+
+      // Exportar solo el área con contenido
+      const dataURL = canvas.toDataURL({
         format: "png",
         quality: 1,
+        left: minX,
+        top: minY,
+        width: maxX - minX,
+        height: maxY - minY,
       });
 
       // Convertir dataURL a blob
