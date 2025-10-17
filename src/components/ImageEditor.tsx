@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useCanvas } from "@/hooks/useCanvas";
 import { Button } from "@/components/ui/button";
+import { Tooltip } from "@/components/ui/tooltip";
 import {
   ArrowRight,
   Type,
@@ -95,6 +96,31 @@ const ImageEditor: React.FC = () => {
       }, 2000);
     }
   };
+
+  // Manejar atajo de teclado para texto (T)
+  useEffect(() => {
+    const handleTextShortcut = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === "t" && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        setShowTextInput(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleTextShortcut);
+    return () => {
+      document.removeEventListener("keydown", handleTextShortcut);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">
@@ -205,41 +231,51 @@ const ImageEditor: React.FC = () => {
                 </Button>
               </label>
 
-              <Button onClick={addArrow} variant="outline">
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Flecha
-              </Button>
+              <Tooltip content="Atajo: A">
+                <Button onClick={addArrow} variant="outline">
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Flecha
+                </Button>
+              </Tooltip>
 
-              <Button onClick={addRectangle} variant="outline">
-                <Square className="w-4 h-4 mr-2" />
-                Rectángulo
-              </Button>
+              <Tooltip content="Atajo: R">
+                <Button onClick={addRectangle} variant="outline">
+                  <Square className="w-4 h-4 mr-2" />
+                  Rectángulo
+                </Button>
+              </Tooltip>
 
-              <Button onClick={addCircle} variant="outline">
-                <Circle className="w-4 h-4 mr-2" />
-                Círculo
-              </Button>
+              <Tooltip content="Atajo: C">
+                <Button onClick={addCircle} variant="outline">
+                  <Circle className="w-4 h-4 mr-2" />
+                  Círculo
+                </Button>
+              </Tooltip>
 
-              <Button onClick={addBlurBox} variant="outline">
-                <Eye className="w-4 h-4 mr-2" />
-                Censurar
-              </Button>
+              <Tooltip content="Atajo: B">
+                <Button onClick={addBlurBox} variant="outline">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Censurar
+                </Button>
+              </Tooltip>
 
-              <Button
-                onClick={() => setShowTextInput(!showTextInput)}
-                variant="outline"
-              >
-                <Type className="w-4 h-4 mr-2" />
-                Texto
-              </Button>
+              <Tooltip content="Atajo: T">
+                <Button
+                  onClick={() => setShowTextInput(!showTextInput)}
+                  variant="outline"
+                >
+                  <Type className="w-4 h-4 mr-2" />
+                  Texto
+                </Button>
+              </Tooltip>
 
               <Button onClick={clearCanvas} variant="outline">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Limpiar
               </Button>
 
-              <Button 
-                onClick={handleCopyToClipboard} 
+              <Button
+                onClick={handleCopyToClipboard}
                 variant={copied ? "secondary" : "default"}
                 disabled={copied}
               >

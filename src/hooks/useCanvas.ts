@@ -86,7 +86,7 @@ export const useCanvas = () => {
       }
     };
 
-    // Agregar el event listener
+    // Agregar el event listener para Delete/Backspace
     document.addEventListener("keydown", handleKeyDown);
 
     // Cleanup
@@ -95,6 +95,49 @@ export const useCanvas = () => {
       canvas.dispose();
     };
   }, []);
+
+  // Efecto para atajos de teclado globales
+  useEffect(() => {
+    const handleKeyboardShortcuts = (e: KeyboardEvent) => {
+      // Ignorar si estamos en un input o textarea
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // Atajos con teclas solas
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+        switch (e.key.toLowerCase()) {
+          case "a":
+            e.preventDefault();
+            addArrow();
+            break;
+          case "r":
+            e.preventDefault();
+            addRectangle();
+            break;
+          case "c":
+            e.preventDefault();
+            addCircle();
+            break;
+          case "b":
+            e.preventDefault();
+            addBlurBox();
+            break;
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener("keydown", handleKeyboardShortcuts);
+    };
+  }, [currentColor, currentFont]);
 
   const addImage = (imageUrl: string) => {
     if (!fabricCanvasRef.current) return;
@@ -437,6 +480,11 @@ export const useCanvas = () => {
     }
   };
 
+  const toggleTextMode = () => {
+    // Esta función será llamada desde ImageEditor para activar el input de texto
+    return "text-mode-toggle";
+  };
+
   return {
     canvasRef,
     fabricCanvas: fabricCanvasRef.current,
@@ -450,6 +498,7 @@ export const useCanvas = () => {
     clearCanvas,
     downloadImage,
     copyToClipboard,
+    toggleTextMode,
     currentFont,
     setCurrentFont,
     currentColor,
