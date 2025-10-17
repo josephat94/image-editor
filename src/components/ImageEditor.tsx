@@ -28,6 +28,8 @@ const ImageEditor: React.FC = () => {
     clearCanvas,
     downloadImage,
     copyToClipboard,
+    undo,
+    redo,
     currentFont,
     setCurrentFont,
     currentColor,
@@ -127,6 +129,29 @@ const ImageEditor: React.FC = () => {
       document.removeEventListener("keydown", handleTextShortcut);
     };
   }, []);
+
+  // Manejar atajos Ctrl+Z (Undo) y Ctrl+Shift+Z (Redo)
+  useEffect(() => {
+    const handleUndoRedo = (e: KeyboardEvent) => {
+      // Detectar Ctrl (Windows/Linux) o Cmd (Mac)
+      if (e.ctrlKey || e.metaKey) {
+        if (e.shiftKey && e.key.toLowerCase() === "z") {
+          // Ctrl+Shift+Z o Cmd+Shift+Z = Redo
+          e.preventDefault();
+          redo();
+        } else if (e.key.toLowerCase() === "z") {
+          // Ctrl+Z o Cmd+Z = Undo
+          e.preventDefault();
+          undo();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleUndoRedo);
+    return () => {
+      document.removeEventListener("keydown", handleUndoRedo);
+    };
+  }, [undo, redo]);
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">

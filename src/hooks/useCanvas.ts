@@ -8,6 +8,10 @@ export const useCanvas = () => {
   const [currentFont, setCurrentFont] = useState("Montserrat, sans-serif");
   const [currentColor, setCurrentColor] = useState("#ff0000");
   const [isBlurMode, setIsBlurMode] = useState(false);
+  
+  // Estado para Undo/Redo
+  const historyRef = useRef<string[]>([]);
+  const historyStepRef = useRef<number>(0);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -21,6 +25,14 @@ export const useCanvas = () => {
 
     fabricCanvasRef.current = canvas;
     setIsReady(true);
+
+    // Guardar estado inicial
+    saveCanvasState();
+
+    // Listeners para detectar cambios en el canvas
+    canvas.on("object:added", () => saveCanvasState());
+    canvas.on("object:modified", () => saveCanvasState());
+    canvas.on("object:removed", () => saveCanvasState());
 
     // Agregar efecto de transparencia al mover objetos
     canvas.on("object:moving", (e) => {
@@ -496,7 +508,7 @@ export const useCanvas = () => {
 
     try {
       const canvas = fabricCanvasRef.current;
-      
+
       // Calcular el área ocupada por los objetos
       const objects = canvas.getObjects();
       if (objects.length === 0) {
@@ -564,6 +576,73 @@ export const useCanvas = () => {
     }
   };
 
+  const saveCanvasState = () => {
+    if (!fabricCanvasRef.current) return;
+
+    const json = JSON.stringify(fabricCanvasRef.current.toJSON());
+    const history = historyRef.current;
+    const currentStep = historyStepRef.current;
+
+    // Eliminar estados futuros si estamos en medio del historial
+    if (currentStep < history.length - 1) {
+      historyRef.current = history.slice(0, currentStep + 1);
+    }
+
+    // Agregar nuevo estado
+    historyRef.current.push(json);
+
+    // Limitar el historial a 20 pasos
+    if (historyRef.current.length > 20) {
+      historyRef.current.shift();
+    }
+
+    historyStepRef.current = historyRef.current.length - 1;
+  };
+
+  const undo = () => {
+    if (!fabricCanvasRef.current || historyStepRef.current === 0) return;
+
+    historyStepRef.current -= 1;
+    const canvas = fabricCanvasRef.current;
+    const previousState = historyRef.current[historyStepRef.current];
+
+    // Temporalmente desactivar los listeners para no guardar el estado
+    canvas.off("object:added");
+    canvas.off("object:modified");
+    canvas.off("object:removed");
+
+    canvas.loadFromJSON(previousState, () => {
+      canvas.renderAll();
+      
+      // Reactivar los listeners
+      canvas.on("object:added", () => saveCanvasState());
+      canvas.on("object:modified", () => saveCanvasState());
+      canvas.on("object:removed", () => saveCanvasState());
+    });
+  };
+
+  const redo = () => {
+    if (!fabricCanvasRef.current || historyStepRef.current >= historyRef.current.length - 1) return;
+
+    historyStepRef.current += 1;
+    const canvas = fabricCanvasRef.current;
+    const nextState = historyRef.current[historyStepRef.current];
+
+    // Temporalmente desactivar los listeners
+    canvas.off("object:added");
+    canvas.off("object:modified");
+    canvas.off("object:removed");
+
+    canvas.loadFromJSON(nextState, () => {
+      canvas.renderAll();
+      
+      // Reactivar los listeners
+      canvas.on("object:added", () => saveCanvasState());
+      canvas.on("object:modified", () => saveCanvasState());
+      canvas.on("object:removed", () => saveCanvasState());
+    });
+  };
+
   const toggleTextMode = () => {
     // Esta función será llamada desde ImageEditor para activar el input de texto
     return "text-mode-toggle";
@@ -582,6 +661,8 @@ export const useCanvas = () => {
     clearCanvas,
     downloadImage,
     copyToClipboard,
+    undo,
+    redo,
     toggleTextMode,
     currentFont,
     setCurrentFont,
