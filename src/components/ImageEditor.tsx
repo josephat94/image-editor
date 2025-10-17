@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useCanvas } from "@/hooks/useCanvas";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Type, Download, Trash2, Upload } from "lucide-react";
+import {
+  ArrowRight,
+  Type,
+  Download,
+  Trash2,
+  Upload,
+  Square,
+  Circle,
+} from "lucide-react";
 
 const ImageEditor: React.FC = () => {
   const {
@@ -10,6 +18,8 @@ const ImageEditor: React.FC = () => {
     addImage,
     addArrow,
     addText,
+    addRectangle,
+    addCircle,
     clearCanvas,
     downloadImage,
     currentFont,
@@ -180,7 +190,17 @@ const ImageEditor: React.FC = () => {
 
               <Button onClick={addArrow} variant="outline">
                 <ArrowRight className="w-4 h-4 mr-2" />
-                Agregar Flecha
+                Flecha
+              </Button>
+
+              <Button onClick={addRectangle} variant="outline">
+                <Square className="w-4 h-4 mr-2" />
+                Rectángulo
+              </Button>
+
+              <Button onClick={addCircle} variant="outline">
+                <Circle className="w-4 h-4 mr-2" />
+                Círculo
               </Button>
 
               <Button
@@ -188,7 +208,7 @@ const ImageEditor: React.FC = () => {
                 variant="outline"
               >
                 <Type className="w-4 h-4 mr-2" />
-                Agregar Texto
+                Texto
               </Button>
 
               <Button onClick={clearCanvas} variant="outline">

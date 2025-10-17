@@ -252,6 +252,87 @@ export const useCanvas = () => {
     });
   };
 
+  const addRectangle = () => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const rect = new fabric.Rect({
+      left: 100,
+      top: 100,
+      width: 200,
+      height: 150,
+      fill: "transparent",
+      stroke: currentColor,
+      strokeWidth: 4,
+      rx: 10,
+      ry: 10,
+      selectable: true,
+      evented: true,
+      opacity: 0,
+      scaleX: 0.5,
+      scaleY: 0.5,
+    });
+
+    canvas.add(rect);
+    rect.bringToFront();
+
+    // Animación de entrada
+    rect.animate("opacity", 1, {
+      duration: 400,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+    rect.animate("scaleX", 1, {
+      duration: 400,
+      easing: fabric.util.ease.easeOutBack,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+    rect.animate("scaleY", 1, {
+      duration: 400,
+      easing: fabric.util.ease.easeOutBack,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+  };
+
+  const addCircle = () => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const circle = new fabric.Circle({
+      left: 100,
+      top: 100,
+      radius: 75,
+      fill: "transparent",
+      stroke: currentColor,
+      strokeWidth: 4,
+      selectable: true,
+      evented: true,
+      opacity: 0,
+      scaleX: 0.5,
+      scaleY: 0.5,
+    });
+
+    canvas.add(circle);
+    circle.bringToFront();
+
+    // Animación de entrada
+    circle.animate("opacity", 1, {
+      duration: 400,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+    circle.animate("scaleX", 1, {
+      duration: 400,
+      easing: fabric.util.ease.easeOutBack,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+    circle.animate("scaleY", 1, {
+      duration: 400,
+      easing: fabric.util.ease.easeOutBack,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+  };
+
   const clearCanvas = () => {
     if (!fabricCanvasRef.current) return;
     fabricCanvasRef.current.clear();
@@ -280,6 +361,8 @@ export const useCanvas = () => {
     addImage,
     addArrow,
     addText,
+    addRectangle,
+    addCircle,
     clearCanvas,
     downloadImage,
     currentFont,
