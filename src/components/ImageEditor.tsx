@@ -13,6 +13,8 @@ import {
   Eye,
   Copy,
   Check,
+  Undo2,
+  Redo2,
 } from "lucide-react";
 
 const ImageEditor: React.FC = () => {
@@ -247,86 +249,144 @@ const ImageEditor: React.FC = () => {
               para eliminar elementos seleccionados
             </p>
 
-            <div className="flex flex-wrap gap-2 justify-center">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload">
-                <Button variant="outline" className="cursor-pointer">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Subir Imagen
-                </Button>
-              </label>
+            {/* Toolbar Profesional */}
+            <div className="bg-gray-700 rounded-lg p-4 shadow-inner">
+              <div className="flex flex-wrap gap-3 justify-center items-center">
+                {/* Sección: Archivo */}
+                <div className="flex gap-2 items-center">
+                  <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+                    Archivo
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload">
+                    <Tooltip content="Subir imagen">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="cursor-pointer"
+                      >
+                        <Upload className="w-4 h-4" />
+                      </Button>
+                    </Tooltip>
+                  </label>
+                </div>
 
-              <Tooltip content="Atajo: A">
-                <Button onClick={addArrow} variant="outline">
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                  Flecha
-                </Button>
-              </Tooltip>
+                {/* Divisor */}
+                <div className="h-8 w-px bg-gray-600" />
 
-              <Tooltip content="Atajo: R">
-                <Button onClick={addRectangle} variant="outline">
-                  <Square className="w-4 h-4 mr-2" />
-                  Rectángulo
-                </Button>
-              </Tooltip>
+                {/* Sección: Edición */}
+                <div className="flex gap-2 items-center">
+                  <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+                    Edición
+                  </div>
+                  <Tooltip content="Deshacer (Ctrl+Z)">
+                    <Button onClick={undo} variant="outline" size="icon">
+                      <Undo2 className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
 
-              <Tooltip content="Atajo: C">
-                <Button onClick={addCircle} variant="outline">
-                  <Circle className="w-4 h-4 mr-2" />
-                  Círculo
-                </Button>
-              </Tooltip>
+                  <Tooltip content="Rehacer (Ctrl+Shift+Z)">
+                    <Button onClick={redo} variant="outline" size="icon">
+                      <Redo2 className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+                </div>
 
-              <Tooltip content="Atajo: B">
-                <Button onClick={addBlurBox} variant="outline">
-                  <Eye className="w-4 h-4 mr-2" />
-                  Censurar
-                </Button>
-              </Tooltip>
+                {/* Divisor */}
+                <div className="h-8 w-px bg-gray-600" />
 
-              <Tooltip content="Atajo: T">
-                <Button
-                  onClick={() => setShowTextInput(!showTextInput)}
-                  variant="outline"
-                >
-                  <Type className="w-4 h-4 mr-2" />
-                  Texto
-                </Button>
-              </Tooltip>
+                {/* Sección: Herramientas */}
+                <div className="flex gap-2 items-center">
+                  <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+                    Herramientas
+                  </div>
+                  <Tooltip content="Flecha (A)">
+                    <Button onClick={addArrow} variant="outline" size="icon">
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
 
-              <Button onClick={clearCanvas} variant="outline">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Limpiar
-              </Button>
+                  <Tooltip content="Rectángulo (R)">
+                    <Button
+                      onClick={addRectangle}
+                      variant="outline"
+                      size="icon"
+                    >
+                      <Square className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
 
-              <Button
-                onClick={handleCopyToClipboard}
-                variant={copied ? "secondary" : "default"}
-                disabled={copied}
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    ¡Copiado!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copiar
-                  </>
-                )}
-              </Button>
+                  <Tooltip content="Círculo (C)">
+                    <Button onClick={addCircle} variant="outline" size="icon">
+                      <Circle className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
 
-              <Button onClick={downloadImage} variant="default">
-                <Download className="w-4 h-4 mr-2" />
-                Descargar
-              </Button>
+                  <Tooltip content="Censurar (B)">
+                    <Button onClick={addBlurBox} variant="outline" size="icon">
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+
+                  <Tooltip content="Texto (T)">
+                    <Button
+                      onClick={() => setShowTextInput(!showTextInput)}
+                      variant="outline"
+                      size="icon"
+                    >
+                      <Type className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+                </div>
+
+                {/* Divisor */}
+                <div className="h-8 w-px bg-gray-600" />
+
+                {/* Sección: Acciones */}
+                <div className="flex gap-2 items-center">
+                  <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+                    Acciones
+                  </div>
+                  <Tooltip content="Limpiar canvas">
+                    <Button onClick={clearCanvas} variant="outline" size="icon">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+
+                  <Tooltip
+                    content={copied ? "¡Copiado!" : "Copiar al portapapeles"}
+                  >
+                    <Button
+                      onClick={handleCopyToClipboard}
+                      variant={copied ? "secondary" : "default"}
+                      disabled={copied}
+                      size="icon"
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </Tooltip>
+
+                  <Tooltip content="Descargar imagen">
+                    <Button
+                      onClick={downloadImage}
+                      variant="default"
+                      size="icon"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+                </div>
+              </div>
             </div>
           </div>
 

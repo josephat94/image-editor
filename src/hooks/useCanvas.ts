@@ -8,7 +8,7 @@ export const useCanvas = () => {
   const [currentFont, setCurrentFont] = useState("Montserrat, sans-serif");
   const [currentColor, setCurrentColor] = useState("#ff0000");
   const [isBlurMode, setIsBlurMode] = useState(false);
-  
+
   // Estado para Undo/Redo
   const historyRef = useRef<string[]>([]);
   const historyStepRef = useRef<number>(0);
@@ -613,7 +613,7 @@ export const useCanvas = () => {
 
     canvas.loadFromJSON(previousState, () => {
       canvas.renderAll();
-      
+
       // Reactivar los listeners
       canvas.on("object:added", () => saveCanvasState());
       canvas.on("object:modified", () => saveCanvasState());
@@ -622,7 +622,11 @@ export const useCanvas = () => {
   };
 
   const redo = () => {
-    if (!fabricCanvasRef.current || historyStepRef.current >= historyRef.current.length - 1) return;
+    if (
+      !fabricCanvasRef.current ||
+      historyStepRef.current >= historyRef.current.length - 1
+    )
+      return;
 
     historyStepRef.current += 1;
     const canvas = fabricCanvasRef.current;
@@ -635,7 +639,7 @@ export const useCanvas = () => {
 
     canvas.loadFromJSON(nextState, () => {
       canvas.renderAll();
-      
+
       // Reactivar los listeners
       canvas.on("object:added", () => saveCanvasState());
       canvas.on("object:modified", () => saveCanvasState());
