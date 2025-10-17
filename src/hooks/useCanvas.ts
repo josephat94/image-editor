@@ -65,8 +65,20 @@ export const useCanvas = () => {
 
           const activeObject = canvas.getActiveObject();
           if (activeObject) {
-            canvas.remove(activeObject);
-            canvas.discardActiveObject();
+            // Verificar si es una selección múltiple
+            if (activeObject.type === "activeSelection") {
+              // Eliminar todos los objetos seleccionados
+              const selection = activeObject as fabric.ActiveSelection;
+              const objects = selection.getObjects();
+              canvas.discardActiveObject();
+              objects.forEach((obj) => {
+                canvas.remove(obj);
+              });
+            } else {
+              // Eliminar un solo objeto
+              canvas.remove(activeObject);
+              canvas.discardActiveObject();
+            }
             canvas.renderAll();
           }
         }
