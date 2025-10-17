@@ -9,6 +9,7 @@ import {
   Upload,
   Square,
   Circle,
+  Eye,
 } from "lucide-react";
 
 const ImageEditor: React.FC = () => {
@@ -20,6 +21,7 @@ const ImageEditor: React.FC = () => {
     addText,
     addRectangle,
     addCircle,
+    addBlurBox,
     clearCanvas,
     downloadImage,
     currentFont,
@@ -201,6 +203,11 @@ const ImageEditor: React.FC = () => {
               <Button onClick={addCircle} variant="outline">
                 <Circle className="w-4 h-4 mr-2" />
                 Círculo
+              </Button>
+
+              <Button onClick={addBlurBox} variant="outline">
+                <Eye className="w-4 h-4 mr-2" />
+                Censurar
               </Button>
 
               <Button

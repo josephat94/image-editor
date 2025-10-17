@@ -7,6 +7,7 @@ export const useCanvas = () => {
   const [isReady, setIsReady] = useState(false);
   const [currentFont, setCurrentFont] = useState("Montserrat, sans-serif");
   const [currentColor, setCurrentColor] = useState("#ff0000");
+  const [isBlurMode, setIsBlurMode] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -333,6 +334,60 @@ export const useCanvas = () => {
     });
   };
 
+  const addBlurBox = () => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const blurRect = new fabric.Rect({
+      left: 100,
+      top: 100,
+      width: 200,
+      height: 100,
+      fill: "rgba(0, 0, 0, 0.7)",
+      selectable: true,
+      evented: true,
+      opacity: 0,
+      scaleX: 0.5,
+      scaleY: 0.5,
+    });
+
+    // Agregar efecto de texto censurado encima
+    const censorText = new fabric.Text("█████", {
+      left: 100,
+      top: 100,
+      fontSize: 40,
+      fill: "#000000",
+      selectable: false,
+      evented: false,
+      opacity: 0.8,
+    });
+
+    const group = new fabric.Group([blurRect, censorText], {
+      selectable: true,
+      evented: true,
+    });
+
+    canvas.add(group);
+    group.bringToFront();
+
+    // Animación de entrada
+    group.animate("opacity", 1, {
+      duration: 400,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+    group.animate("scaleX", 1, {
+      duration: 400,
+      easing: fabric.util.ease.easeOutBack,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+    group.animate("scaleY", 1, {
+      duration: 400,
+      easing: fabric.util.ease.easeOutBack,
+      onChange: canvas.renderAll.bind(canvas),
+    });
+  };
+
   const clearCanvas = () => {
     if (!fabricCanvasRef.current) return;
     fabricCanvasRef.current.clear();
@@ -363,11 +418,14 @@ export const useCanvas = () => {
     addText,
     addRectangle,
     addCircle,
+    addBlurBox,
     clearCanvas,
     downloadImage,
     currentFont,
     setCurrentFont,
     currentColor,
     setCurrentColor,
+    isBlurMode,
+    setIsBlurMode,
   };
 };
