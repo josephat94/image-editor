@@ -8,10 +8,52 @@ export const useCanvas = () => {
   const [currentFont, setCurrentFont] = useState("Montserrat, sans-serif");
   const [currentColor, setCurrentColor] = useState("#ff0000");
   const [isBlurMode, setIsBlurMode] = useState(false);
+  const [isArrowMode, setIsArrowMode] = useState(false);
+  const [isRectangleMode, setIsRectangleMode] = useState(false);
+  const [isCircleMode, setIsCircleMode] = useState(false);
 
   // Estado para Undo/Redo
   const historyRef = useRef<string[]>([]);
   const historyStepRef = useRef<number>(0);
+
+  // Referencias para el modo de dibujo de flechas
+  const arrowDrawingRef = useRef<{
+    isDrawing: boolean;
+    startX: number;
+    startY: number;
+    tempArrow: fabric.Group | null;
+  }>({
+    isDrawing: false,
+    startX: 0,
+    startY: 0,
+    tempArrow: null,
+  });
+
+  // Referencias para el modo de dibujo de rectángulos
+  const rectangleDrawingRef = useRef<{
+    isDrawing: boolean;
+    startX: number;
+    startY: number;
+    tempRect: fabric.Rect | null;
+  }>({
+    isDrawing: false,
+    startX: 0,
+    startY: 0,
+    tempRect: null,
+  });
+
+  // Referencias para el modo de dibujo de círculos
+  const circleDrawingRef = useRef<{
+    isDrawing: boolean;
+    startX: number;
+    startY: number;
+    tempCircle: fabric.Circle | null;
+  }>({
+    isDrawing: false,
+    startX: 0,
+    startY: 0,
+    tempCircle: null,
+  });
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -108,6 +150,387 @@ export const useCanvas = () => {
     };
   }, []);
 
+  // Efecto para manejar el modo de dibujo de flechas
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !isArrowMode) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const handleMouseDown = (e: fabric.IEvent) => {
+      if (!canvas || !e.pointer) return;
+
+      arrowDrawingRef.current.isDrawing = true;
+      arrowDrawingRef.current.startX = e.pointer.x;
+      arrowDrawingRef.current.startY = e.pointer.y;
+    };
+
+    const handleMouseMove = (e: fabric.IEvent) => {
+      if (!canvas || !arrowDrawingRef.current.isDrawing || !e.pointer) return;
+
+      // Eliminar la flecha temporal anterior si existe
+      if (arrowDrawingRef.current.tempArrow) {
+        canvas.remove(arrowDrawingRef.current.tempArrow);
+      }
+
+      const { startX, startY } = arrowDrawingRef.current;
+      const endX = e.pointer.x;
+      const endY = e.pointer.y;
+
+      // Crear una flecha temporal
+      const tempArrow = createArrowShape(
+        startX,
+        startY,
+        endX,
+        endY,
+        currentColor,
+        true
+      );
+
+      arrowDrawingRef.current.tempArrow = tempArrow;
+      canvas.add(tempArrow);
+      canvas.renderAll();
+    };
+
+    const handleMouseUp = (e: fabric.IEvent) => {
+      if (!canvas || !arrowDrawingRef.current.isDrawing || !e.pointer) return;
+
+      const { startX, startY } = arrowDrawingRef.current;
+      const endX = e.pointer.x;
+      const endY = e.pointer.y;
+
+      // Eliminar la flecha temporal
+      if (arrowDrawingRef.current.tempArrow) {
+        canvas.remove(arrowDrawingRef.current.tempArrow);
+        arrowDrawingRef.current.tempArrow = null;
+      }
+
+      // Solo crear la flecha si hay un movimiento mínimo (para evitar flechas de punto)
+      const distance = Math.sqrt(
+        Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)
+      );
+
+      if (distance > 10) {
+        // Crear la flecha final
+        const finalArrow = createArrowShape(
+          startX,
+          startY,
+          endX,
+          endY,
+          currentColor,
+          false
+        );
+
+        canvas.add(finalArrow);
+        finalArrow.bringToFront();
+        canvas.renderAll();
+      }
+
+      // Resetear el estado de dibujo
+      arrowDrawingRef.current.isDrawing = false;
+
+      // Desactivar el modo de flecha y restaurar la funcionalidad normal
+      setIsArrowMode(false);
+      canvas.selection = true;
+      canvas.forEachObject((obj) => {
+        obj.selectable = true;
+      });
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+    };
+
+    // Manejar tecla Escape para cancelar el modo de dibujo
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // Eliminar la flecha temporal si existe
+        if (arrowDrawingRef.current.tempArrow) {
+          canvas.remove(arrowDrawingRef.current.tempArrow);
+          arrowDrawingRef.current.tempArrow = null;
+        }
+
+        // Resetear el estado
+        arrowDrawingRef.current.isDrawing = false;
+        setIsArrowMode(false);
+        canvas.selection = true;
+        canvas.forEachObject((obj) => {
+          obj.selectable = true;
+        });
+        canvas.defaultCursor = "default";
+        canvas.hoverCursor = "move";
+        canvas.renderAll();
+      }
+    };
+
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isArrowMode, currentColor]);
+
+  // Efecto para manejar el modo de dibujo de rectángulos
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !isRectangleMode) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const handleMouseDown = (e: fabric.IEvent) => {
+      if (!canvas || !e.pointer) return;
+
+      rectangleDrawingRef.current.isDrawing = true;
+      rectangleDrawingRef.current.startX = e.pointer.x;
+      rectangleDrawingRef.current.startY = e.pointer.y;
+    };
+
+    const handleMouseMove = (e: fabric.IEvent) => {
+      if (!canvas || !rectangleDrawingRef.current.isDrawing || !e.pointer)
+        return;
+
+      // Eliminar el rectángulo temporal anterior si existe
+      if (rectangleDrawingRef.current.tempRect) {
+        canvas.remove(rectangleDrawingRef.current.tempRect);
+      }
+
+      const { startX, startY } = rectangleDrawingRef.current;
+      const width = e.pointer.x - startX;
+      const height = e.pointer.y - startY;
+
+      // Crear un rectángulo temporal
+      const tempRect = new fabric.Rect({
+        left: width > 0 ? startX : e.pointer.x,
+        top: height > 0 ? startY : e.pointer.y,
+        width: Math.abs(width),
+        height: Math.abs(height),
+        fill: "transparent",
+        stroke: currentColor,
+        strokeWidth: 4,
+        rx: 10,
+        ry: 10,
+        selectable: false,
+        evented: false,
+        opacity: 0.6,
+      });
+
+      rectangleDrawingRef.current.tempRect = tempRect;
+      canvas.add(tempRect);
+      canvas.renderAll();
+    };
+
+    const handleMouseUp = (e: fabric.IEvent) => {
+      if (!canvas || !rectangleDrawingRef.current.isDrawing || !e.pointer)
+        return;
+
+      const { startX, startY } = rectangleDrawingRef.current;
+      const width = e.pointer.x - startX;
+      const height = e.pointer.y - startY;
+
+      // Eliminar el rectángulo temporal
+      if (rectangleDrawingRef.current.tempRect) {
+        canvas.remove(rectangleDrawingRef.current.tempRect);
+        rectangleDrawingRef.current.tempRect = null;
+      }
+
+      // Solo crear el rectángulo si tiene un tamaño mínimo
+      if (Math.abs(width) > 10 && Math.abs(height) > 10) {
+        // Crear el rectángulo final
+        const finalRect = new fabric.Rect({
+          left: width > 0 ? startX : e.pointer.x,
+          top: height > 0 ? startY : e.pointer.y,
+          width: Math.abs(width),
+          height: Math.abs(height),
+          fill: "transparent",
+          stroke: currentColor,
+          strokeWidth: 4,
+          rx: 10,
+          ry: 10,
+          selectable: true,
+          evented: true,
+        });
+
+        canvas.add(finalRect);
+        finalRect.bringToFront();
+        canvas.renderAll();
+      }
+
+      // Resetear el estado de dibujo
+      rectangleDrawingRef.current.isDrawing = false;
+
+      // Desactivar el modo de rectángulo y restaurar la funcionalidad normal
+      setIsRectangleMode(false);
+      canvas.selection = true;
+      canvas.forEachObject((obj) => {
+        obj.selectable = true;
+      });
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+    };
+
+    // Manejar tecla Escape para cancelar el modo de dibujo
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // Eliminar el rectángulo temporal si existe
+        if (rectangleDrawingRef.current.tempRect) {
+          canvas.remove(rectangleDrawingRef.current.tempRect);
+          rectangleDrawingRef.current.tempRect = null;
+        }
+
+        // Resetear el estado
+        rectangleDrawingRef.current.isDrawing = false;
+        setIsRectangleMode(false);
+        canvas.selection = true;
+        canvas.forEachObject((obj) => {
+          obj.selectable = true;
+        });
+        canvas.defaultCursor = "default";
+        canvas.hoverCursor = "move";
+        canvas.renderAll();
+      }
+    };
+
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isRectangleMode, currentColor]);
+
+  // Efecto para manejar el modo de dibujo de círculos
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !isCircleMode) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const handleMouseDown = (e: fabric.IEvent) => {
+      if (!canvas || !e.pointer) return;
+
+      circleDrawingRef.current.isDrawing = true;
+      circleDrawingRef.current.startX = e.pointer.x;
+      circleDrawingRef.current.startY = e.pointer.y;
+    };
+
+    const handleMouseMove = (e: fabric.IEvent) => {
+      if (!canvas || !circleDrawingRef.current.isDrawing || !e.pointer) return;
+
+      // Eliminar el círculo temporal anterior si existe
+      if (circleDrawingRef.current.tempCircle) {
+        canvas.remove(circleDrawingRef.current.tempCircle);
+      }
+
+      const { startX, startY } = circleDrawingRef.current;
+      const deltaX = e.pointer.x - startX;
+      const deltaY = e.pointer.y - startY;
+      const radius = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      // Crear un círculo temporal
+      const tempCircle = new fabric.Circle({
+        left: startX - radius,
+        top: startY - radius,
+        radius: radius,
+        fill: "transparent",
+        stroke: currentColor,
+        strokeWidth: 4,
+        selectable: false,
+        evented: false,
+        opacity: 0.6,
+      });
+
+      circleDrawingRef.current.tempCircle = tempCircle;
+      canvas.add(tempCircle);
+      canvas.renderAll();
+    };
+
+    const handleMouseUp = (e: fabric.IEvent) => {
+      if (!canvas || !circleDrawingRef.current.isDrawing || !e.pointer) return;
+
+      const { startX, startY } = circleDrawingRef.current;
+      const deltaX = e.pointer.x - startX;
+      const deltaY = e.pointer.y - startY;
+      const radius = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      // Eliminar el círculo temporal
+      if (circleDrawingRef.current.tempCircle) {
+        canvas.remove(circleDrawingRef.current.tempCircle);
+        circleDrawingRef.current.tempCircle = null;
+      }
+
+      // Solo crear el círculo si tiene un tamaño mínimo
+      if (radius > 10) {
+        // Crear el círculo final
+        const finalCircle = new fabric.Circle({
+          left: startX - radius,
+          top: startY - radius,
+          radius: radius,
+          fill: "transparent",
+          stroke: currentColor,
+          strokeWidth: 4,
+          selectable: true,
+          evented: true,
+        });
+
+        canvas.add(finalCircle);
+        finalCircle.bringToFront();
+        canvas.renderAll();
+      }
+
+      // Resetear el estado de dibujo
+      circleDrawingRef.current.isDrawing = false;
+
+      // Desactivar el modo de círculo y restaurar la funcionalidad normal
+      setIsCircleMode(false);
+      canvas.selection = true;
+      canvas.forEachObject((obj) => {
+        obj.selectable = true;
+      });
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+    };
+
+    // Manejar tecla Escape para cancelar el modo de dibujo
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // Eliminar el círculo temporal si existe
+        if (circleDrawingRef.current.tempCircle) {
+          canvas.remove(circleDrawingRef.current.tempCircle);
+          circleDrawingRef.current.tempCircle = null;
+        }
+
+        // Resetear el estado
+        circleDrawingRef.current.isDrawing = false;
+        setIsCircleMode(false);
+        canvas.selection = true;
+        canvas.forEachObject((obj) => {
+          obj.selectable = true;
+        });
+        canvas.defaultCursor = "default";
+        canvas.hoverCursor = "move";
+        canvas.renderAll();
+      }
+    };
+
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isCircleMode, currentColor]);
+
   // Efecto para atajos de teclado globales
   useEffect(() => {
     const handleKeyboardShortcuts = (e: KeyboardEvent) => {
@@ -181,89 +604,126 @@ export const useCanvas = () => {
     });
   };
 
-  const addArrow = () => {
-    if (!fabricCanvasRef.current) return;
-
-    const canvas = fabricCanvasRef.current;
-    const startX = 100;
-    const startY = 100;
-    const endX = 250;
-    const endY = 100;
-
-    // Calcular ángulo de la flecha
+  // Función auxiliar para crear una flecha dados dos puntos
+  const createArrowShape = (
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    color: string,
+    isTemp: boolean = false
+  ) => {
+    // Calcular ángulo y longitud de la flecha
     const angle = Math.atan2(endY - startY, endX - startX);
-    const headLength = 15; // Longitud de la punta de la flecha
+    const headLength = 31; // Longitud de la punta triangular (25% más grande)
+    const headWidth = 25; // Ancho de la punta triangular (25% más grande)
+    const tailWidth = 3; // Grosor al inicio (delgado)
+    const bodyEndWidth = 14; // Grosor al final del cuerpo (antes de la punta)
 
-    // Crear la línea principal
-    const line = new fabric.Line([startX, startY, endX, endY], {
-      stroke: currentColor,
-      strokeWidth: 4,
+    // Calcular el punto donde termina el cuerpo (antes de la punta)
+    const bodyEndX = endX - headLength * Math.cos(angle);
+    const bodyEndY = endY - headLength * Math.sin(angle);
+
+    // Crear el cuerpo cónico de la flecha (trapecio)
+    const bodyPoints = [
+      // Lado superior del inicio (delgado)
+      {
+        x: startX + (tailWidth / 2) * Math.cos(angle + Math.PI / 2),
+        y: startY + (tailWidth / 2) * Math.sin(angle + Math.PI / 2),
+      },
+      // Lado superior del final (más ancho)
+      {
+        x: bodyEndX + (bodyEndWidth / 2) * Math.cos(angle + Math.PI / 2),
+        y: bodyEndY + (bodyEndWidth / 2) * Math.sin(angle + Math.PI / 2),
+      },
+      // Lado inferior del final (más ancho)
+      {
+        x: bodyEndX + (bodyEndWidth / 2) * Math.cos(angle - Math.PI / 2),
+        y: bodyEndY + (bodyEndWidth / 2) * Math.sin(angle - Math.PI / 2),
+      },
+      // Lado inferior del inicio (delgado)
+      {
+        x: startX + (tailWidth / 2) * Math.cos(angle - Math.PI / 2),
+        y: startY + (tailWidth / 2) * Math.sin(angle - Math.PI / 2),
+      },
+    ];
+
+    // Crear el cuerpo cónico con esquinas redondeadas
+    const body = new fabric.Polygon(bodyPoints, {
+      fill: color,
+      stroke: color,
+      strokeWidth: 1,
+      strokeLineJoin: "round",
+      strokeLineCap: "round",
       selectable: false,
       evented: false,
     });
 
-    // Crear las dos líneas de la punta de la flecha
-    const arrowLine1 = new fabric.Line(
-      [
-        endX,
-        endY,
-        endX - headLength * Math.cos(angle - Math.PI / 6),
-        endY - headLength * Math.sin(angle - Math.PI / 6),
-      ],
+    // Calcular los puntos del triángulo de la punta
+    const trianglePoints = [
+      { x: endX, y: endY }, // Punta de la flecha
       {
-        stroke: currentColor,
-        strokeWidth: 4,
-        selectable: false,
-        evented: false,
-      }
-    );
-
-    const arrowLine2 = new fabric.Line(
-      [
-        endX,
-        endY,
-        endX - headLength * Math.cos(angle + Math.PI / 6),
-        endY - headLength * Math.sin(angle + Math.PI / 6),
-      ],
+        x:
+          endX -
+          headLength * Math.cos(angle) -
+          (headWidth / 2) * Math.cos(angle + Math.PI / 2),
+        y:
+          endY -
+          headLength * Math.sin(angle) -
+          (headWidth / 2) * Math.sin(angle + Math.PI / 2),
+      },
       {
-        stroke: currentColor,
-        strokeWidth: 4,
-        selectable: false,
-        evented: false,
-      }
-    );
+        x:
+          endX -
+          headLength * Math.cos(angle) -
+          (headWidth / 2) * Math.cos(angle - Math.PI / 2),
+        y:
+          endY -
+          headLength * Math.sin(angle) -
+          (headWidth / 2) * Math.sin(angle - Math.PI / 2),
+      },
+    ];
 
-    // Agrupar todas las partes de la flecha
-    const arrowGroup = new fabric.Group([line, arrowLine1, arrowLine2], {
-      selectable: true,
-      evented: true,
-      hasControls: true,
-      hasBorders: true,
+    // Crear el triángulo relleno para la punta con esquinas redondeadas
+    const arrowHead = new fabric.Polygon(trianglePoints, {
+      fill: color,
+      stroke: color,
+      strokeWidth: 3,
+      strokeLineJoin: "round",
+      strokeLineCap: "round",
+      selectable: false,
+      evented: false,
+    });
+
+    // Agrupar el cuerpo cónico y la punta
+    const arrowGroup = new fabric.Group([body, arrowHead], {
+      selectable: !isTemp,
+      evented: !isTemp,
+      hasControls: !isTemp,
+      hasBorders: !isTemp,
       lockRotation: false,
-      opacity: 0,
-      scaleX: 0.5,
-      scaleY: 0.5,
+      opacity: isTemp ? 0.6 : 1,
     });
 
-    canvas.add(arrowGroup);
-    // Asegurar que la flecha esté siempre al frente
-    arrowGroup.bringToFront();
+    return arrowGroup;
+  };
 
-    // Animación de entrada
-    arrowGroup.animate("opacity", 1, {
-      duration: 400,
-      onChange: canvas.renderAll.bind(canvas),
+  const addArrow = () => {
+    if (!fabricCanvasRef.current) return;
+
+    // Activar el modo de dibujo de flechas
+    setIsArrowMode(true);
+    const canvas = fabricCanvasRef.current;
+
+    // Desactivar la selección de objetos mientras se dibuja
+    canvas.selection = false;
+    canvas.forEachObject((obj) => {
+      obj.selectable = false;
     });
-    arrowGroup.animate("scaleX", 1, {
-      duration: 400,
-      easing: fabric.util.ease.easeOutBack,
-      onChange: canvas.renderAll.bind(canvas),
-    });
-    arrowGroup.animate("scaleY", 1, {
-      duration: 400,
-      easing: fabric.util.ease.easeOutBack,
-      onChange: canvas.renderAll.bind(canvas),
-    });
+
+    // Cambiar el cursor para indicar el modo de dibujo
+    canvas.defaultCursor = "crosshair";
+    canvas.hoverCursor = "crosshair";
   };
 
   const addText = (text: string) => {
@@ -311,82 +771,37 @@ export const useCanvas = () => {
   const addRectangle = () => {
     if (!fabricCanvasRef.current) return;
 
+    // Activar el modo de dibujo de rectángulos
+    setIsRectangleMode(true);
     const canvas = fabricCanvasRef.current;
 
-    const rect = new fabric.Rect({
-      left: 100,
-      top: 100,
-      width: 200,
-      height: 150,
-      fill: "transparent",
-      stroke: currentColor,
-      strokeWidth: 4,
-      rx: 10,
-      ry: 10,
-      selectable: true,
-      evented: true,
-      opacity: 0,
-      scaleX: 0.5,
-      scaleY: 0.5,
+    // Desactivar la selección de objetos mientras se dibuja
+    canvas.selection = false;
+    canvas.forEachObject((obj) => {
+      obj.selectable = false;
     });
 
-    canvas.add(rect);
-    rect.bringToFront();
-
-    // Animación de entrada
-    rect.animate("opacity", 1, {
-      duration: 400,
-      onChange: canvas.renderAll.bind(canvas),
-    });
-    rect.animate("scaleX", 1, {
-      duration: 400,
-      easing: fabric.util.ease.easeOutBack,
-      onChange: canvas.renderAll.bind(canvas),
-    });
-    rect.animate("scaleY", 1, {
-      duration: 400,
-      easing: fabric.util.ease.easeOutBack,
-      onChange: canvas.renderAll.bind(canvas),
-    });
+    // Cambiar el cursor para indicar el modo de dibujo
+    canvas.defaultCursor = "crosshair";
+    canvas.hoverCursor = "crosshair";
   };
 
   const addCircle = () => {
     if (!fabricCanvasRef.current) return;
 
+    // Activar el modo de dibujo de círculos
+    setIsCircleMode(true);
     const canvas = fabricCanvasRef.current;
 
-    const circle = new fabric.Circle({
-      left: 100,
-      top: 100,
-      radius: 75,
-      fill: "transparent",
-      stroke: currentColor,
-      strokeWidth: 4,
-      selectable: true,
-      evented: true,
-      opacity: 0,
-      scaleX: 0.5,
-      scaleY: 0.5,
+    // Desactivar la selección de objetos mientras se dibuja
+    canvas.selection = false;
+    canvas.forEachObject((obj) => {
+      obj.selectable = false;
     });
 
-    canvas.add(circle);
-    circle.bringToFront();
-
-    // Animación de entrada
-    circle.animate("opacity", 1, {
-      duration: 400,
-      onChange: canvas.renderAll.bind(canvas),
-    });
-    circle.animate("scaleX", 1, {
-      duration: 400,
-      easing: fabric.util.ease.easeOutBack,
-      onChange: canvas.renderAll.bind(canvas),
-    });
-    circle.animate("scaleY", 1, {
-      duration: 400,
-      easing: fabric.util.ease.easeOutBack,
-      onChange: canvas.renderAll.bind(canvas),
-    });
+    // Cambiar el cursor para indicar el modo de dibujo
+    canvas.defaultCursor = "crosshair";
+    canvas.hoverCursor = "crosshair";
   };
 
   const addBlurBox = () => {
@@ -652,6 +1067,13 @@ export const useCanvas = () => {
     return "text-mode-toggle";
   };
 
+  const setBackgroundColor = (color: string) => {
+    if (!fabricCanvasRef.current) return;
+
+    fabricCanvasRef.current.backgroundColor = color;
+    fabricCanvasRef.current.renderAll();
+  };
+
   return {
     canvasRef,
     fabricCanvas: fabricCanvasRef.current,
@@ -674,5 +1096,6 @@ export const useCanvas = () => {
     setCurrentColor,
     isBlurMode,
     setIsBlurMode,
+    setBackgroundColor,
   };
 };

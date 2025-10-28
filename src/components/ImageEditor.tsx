@@ -17,6 +17,16 @@ import {
   Redo2,
 } from "lucide-react";
 
+// Colores disponibles para los elementos
+const AVAILABLE_COLORS = [
+  { color: "#3A86FF", title: "Azul" },
+  { color: "#FF006E", title: "Fuchsia" },
+  { color: "#8338EC", title: "Morado" },
+  { color: "#FB5607", title: "Naranja" },
+  { color: "#FFBE0B", title: "Amarillo" },
+  { color: "#000000", title: "Negro" },
+];
+
 const ImageEditor: React.FC = () => {
   const {
     canvasRef,
@@ -36,10 +46,14 @@ const ImageEditor: React.FC = () => {
     setCurrentFont,
     currentColor,
     setCurrentColor,
+    setBackgroundColor,
   } = useCanvas();
   const [textInput, setTextInput] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [canvasBackground, setCanvasBackground] = useState<
+    "#ffffff" | "#000000"
+  >("#ffffff");
 
   // Manejar pegar imagen con Cmd+V
   useEffect(() => {
@@ -99,6 +113,11 @@ const ImageEditor: React.FC = () => {
         setCopied(false);
       }, 2000);
     }
+  };
+
+  const handleBackgroundChange = (color: "#ffffff" | "#000000") => {
+    setCanvasBackground(color);
+    setBackgroundColor(color);
   };
 
   // Manejar atajo de teclado para texto (T)
@@ -164,73 +183,54 @@ const ImageEditor: React.FC = () => {
           </h1>
 
           {/* Selector de Color Global */}
-          <div className="mb-6 flex flex-col items-center">
+          <div className="mb-4 flex flex-col items-center">
             <label className="block text-sm font-medium text-white mb-2">
               Color de los elementos dinamicos
             </label>
             <div className="flex gap-3 items-center">
               {/* Colores predefinidos */}
+              {AVAILABLE_COLORS.map(({ color, title }) => (
+                <button
+                  key={color}
+                  onClick={() => setCurrentColor(color)}
+                  className={`w-10 h-10 rounded-full border-2 ${
+                    currentColor === color
+                      ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
+                      : "border-gray-500"
+                  }`}
+                  style={{ backgroundColor: color }}
+                  title={title}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Selector de Fondo del Canvas */}
+          <div className="mb-6 flex flex-col items-center">
+            <label className="block text-sm font-medium text-white mb-2">
+              Color de fondo del canvas
+            </label>
+            <div className="flex gap-3 items-center">
               <button
-                onClick={() => setCurrentColor("#ff0000")}
-                className={`w-10 h-10 rounded-full border-2 ${
-                  currentColor === "#ff0000"
+                onClick={() => handleBackgroundChange("#ffffff")}
+                className={`w-12 h-12 rounded-lg border-2 ${
+                  canvasBackground === "#ffffff"
                     ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
                     : "border-gray-500"
                 }`}
-                style={{ backgroundColor: "#ff0000" }}
-                title="Rojo"
+                style={{ backgroundColor: "#ffffff" }}
+                title="Fondo Blanco"
               />
               <button
-                onClick={() => setCurrentColor("#000000")}
-                className={`w-10 h-10 rounded-full border-2 ${
-                  currentColor === "#000000"
+                onClick={() => handleBackgroundChange("#000000")}
+                className={`w-12 h-12 rounded-lg border-2 ${
+                  canvasBackground === "#000000"
                     ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
                     : "border-gray-500"
                 }`}
                 style={{ backgroundColor: "#000000" }}
-                title="Negro"
+                title="Fondo Negro"
               />
-              <button
-                onClick={() => setCurrentColor("#2563eb")}
-                className={`w-10 h-10 rounded-full border-2 ${
-                  currentColor === "#2563eb"
-                    ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
-                    : "border-gray-500"
-                }`}
-                style={{ backgroundColor: "#2563eb" }}
-                title="Azul"
-              />
-              <button
-                onClick={() => setCurrentColor("#16a34a")}
-                className={`w-10 h-10 rounded-full border-2 ${
-                  currentColor === "#16a34a"
-                    ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
-                    : "border-gray-500"
-                }`}
-                style={{ backgroundColor: "#16a34a" }}
-                title="Verde"
-              />
-              <button
-                onClick={() => setCurrentColor("#ea580c")}
-                className={`w-10 h-10 rounded-full border-2 ${
-                  currentColor === "#ea580c"
-                    ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
-                    : "border-gray-500"
-                }`}
-                style={{ backgroundColor: "#ea580c" }}
-                title="Naranja"
-              />
-              <button
-                onClick={() => setCurrentColor("#9333ea")}
-                className={`w-10 h-10 rounded-full border-2 ${
-                  currentColor === "#9333ea"
-                    ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
-                    : "border-gray-500"
-                }`}
-                style={{ backgroundColor: "#9333ea" }}
-                title="Morado"
-              />
-              {/* Selector de color personalizado */}
             </div>
           </div>
 
@@ -434,6 +434,7 @@ const ImageEditor: React.FC = () => {
                   className="flex-1 px-3 py-2 bg-gray-600 text-white border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
                   onKeyPress={(e) => e.key === "Enter" && handleAddText()}
                   style={{ fontFamily: currentFont }}
+                  autoFocus
                 />
                 <Button onClick={handleAddText} size="sm">
                   Agregar
