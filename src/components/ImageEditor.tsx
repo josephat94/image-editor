@@ -15,6 +15,9 @@ import {
   Check,
   Undo2,
   Redo2,
+  Hash,
+  RotateCcw,
+  CopyPlus,
 } from "lucide-react";
 
 // Colores disponibles para los elementos
@@ -37,6 +40,10 @@ const ImageEditor: React.FC = () => {
     addRectangle,
     addCircle,
     addBlurBox,
+    addNumberedAnnotation,
+    resetAnnotationCounter,
+    annotationCounter,
+    duplicateSelected,
     clearCanvas,
     downloadImage,
     copyToClipboard,
@@ -205,6 +212,29 @@ const ImageEditor: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Contador de Anotaciones */}
+              <div className="hidden">
+                <label className="block text-sm font-medium text-white mb-2">
+                  Próxima anotación
+                </label>
+                <div className="flex gap-2 items-center">
+                  <div className="bg-gray-700 px-4 py-2 rounded-lg border border-gray-600">
+                    <span className="text-2xl font-bold text-white">
+                      {annotationCounter}
+                    </span>
+                  </div>
+                  <Tooltip content="Reiniciar contador">
+                    <Button
+                      onClick={resetAnnotationCounter}
+                      variant="outline"
+                      size="icon"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+                </div>
+              </div>
             </div>
 
             {/* Selector de Fondo del Canvas */}
@@ -299,6 +329,16 @@ const ImageEditor: React.FC = () => {
                       <Redo2 className="w-4 h-4" />
                     </Button>
                   </Tooltip>
+
+                  <Tooltip content="Duplicar elemento (Ctrl+D)">
+                    <Button
+                      onClick={duplicateSelected}
+                      variant="outline"
+                      size="icon"
+                    >
+                      <CopyPlus className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
                 </div>
 
                 {/* Divisor */}
@@ -334,6 +374,16 @@ const ImageEditor: React.FC = () => {
                   <Tooltip content="Censurar (B)">
                     <Button onClick={addBlurBox} variant="outline" size="icon">
                       <Eye className="w-4 h-4" />
+                    </Button>
+                  </Tooltip>
+
+                  <Tooltip content="Anotación Numerada (N)">
+                    <Button
+                      onClick={addNumberedAnnotation}
+                      variant="outline"
+                      size="icon"
+                    >
+                      <Hash className="w-4 h-4" />
                     </Button>
                   </Tooltip>
 

@@ -11,6 +11,7 @@ export const useCanvas = () => {
   const [isArrowMode, setIsArrowMode] = useState(false);
   const [isRectangleMode, setIsRectangleMode] = useState(false);
   const [isCircleMode, setIsCircleMode] = useState(false);
+  const [annotationCounter, setAnnotationCounter] = useState(1);
 
   // Estado para Undo/Redo
   const historyRef = useRef<string[]>([]);
@@ -53,6 +54,19 @@ export const useCanvas = () => {
     startX: 0,
     startY: 0,
     tempCircle: null,
+  });
+
+  // Referencias para el modo de dibujo de blur
+  const blurDrawingRef = useRef<{
+    isDrawing: boolean;
+    startX: number;
+    startY: number;
+    tempBlur: fabric.Group | fabric.Rect | null;
+  }>({
+    isDrawing: false,
+    startX: 0,
+    startY: 0,
+    tempBlur: null,
   });
 
   useEffect(() => {
@@ -531,6 +545,170 @@ export const useCanvas = () => {
     };
   }, [isCircleMode, currentColor]);
 
+  // Efecto para manejar el modo de dibujo de blur (censurar)
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !isBlurMode) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const handleMouseDown = (e: fabric.IEvent) => {
+      if (!canvas || !e.pointer) return;
+
+      blurDrawingRef.current.isDrawing = true;
+      blurDrawingRef.current.startX = e.pointer.x;
+      blurDrawingRef.current.startY = e.pointer.y;
+    };
+
+    const handleMouseMove = (e: fabric.IEvent) => {
+      if (!canvas || !blurDrawingRef.current.isDrawing || !e.pointer) return;
+
+      // Eliminar el blur temporal anterior si existe
+      if (blurDrawingRef.current.tempBlur) {
+        canvas.remove(blurDrawingRef.current.tempBlur);
+      }
+
+      const { startX, startY } = blurDrawingRef.current;
+      const width = e.pointer.x - startX;
+      const height = e.pointer.y - startY;
+
+      const rectWidth = Math.abs(width);
+      const rectHeight = Math.abs(height);
+
+      // Crear efecto pixelado temporal
+      const pixelSize = 15;
+      const pixelsX = Math.ceil(rectWidth / pixelSize);
+      const pixelsY = Math.ceil(rectHeight / pixelSize);
+
+      const pixels: fabric.Rect[] = [];
+      for (let i = 0; i < pixelsX; i++) {
+        for (let j = 0; j < pixelsY; j++) {
+          const brightness = Math.floor(Math.random() * 100) + 100; // 100-200
+          const pixel = new fabric.Rect({
+            left: i * pixelSize,
+            top: j * pixelSize,
+            width: pixelSize - 1,
+            height: pixelSize - 1,
+            fill: `rgb(${brightness}, ${brightness}, ${brightness})`,
+            selectable: false,
+            evented: false,
+          });
+          pixels.push(pixel);
+        }
+      }
+
+      const tempBlurGroup = new fabric.Group(pixels, {
+        left: width > 0 ? startX : e.pointer.x,
+        top: height > 0 ? startY : e.pointer.y,
+        selectable: false,
+        evented: false,
+        opacity: 0.6,
+      });
+
+      blurDrawingRef.current.tempBlur = tempBlurGroup;
+      canvas.add(tempBlurGroup);
+      canvas.renderAll();
+    };
+
+    const handleMouseUp = (e: fabric.IEvent) => {
+      if (!canvas || !blurDrawingRef.current.isDrawing || !e.pointer) return;
+
+      const { startX, startY } = blurDrawingRef.current;
+      const width = e.pointer.x - startX;
+      const height = e.pointer.y - startY;
+
+      // Eliminar el blur temporal
+      if (blurDrawingRef.current.tempBlur) {
+        canvas.remove(blurDrawingRef.current.tempBlur);
+        blurDrawingRef.current.tempBlur = null;
+      }
+
+      const rectWidth = Math.abs(width);
+      const rectHeight = Math.abs(height);
+
+      // Solo crear el blur si tiene un tamaño mínimo
+      if (rectWidth > 20 && rectHeight > 20) {
+        // Crear efecto pixelado final
+        const pixelSize = 15;
+        const pixelsX = Math.ceil(rectWidth / pixelSize);
+        const pixelsY = Math.ceil(rectHeight / pixelSize);
+
+        const pixels: fabric.Rect[] = [];
+        for (let i = 0; i < pixelsX; i++) {
+          for (let j = 0; j < pixelsY; j++) {
+            const brightness = Math.floor(Math.random() * 100) + 100; // 100-200
+            const pixel = new fabric.Rect({
+              left: i * pixelSize,
+              top: j * pixelSize,
+              width: pixelSize - 1,
+              height: pixelSize - 1,
+              fill: `rgb(${brightness}, ${brightness}, ${brightness})`,
+              selectable: false,
+              evented: false,
+            });
+            pixels.push(pixel);
+          }
+        }
+
+        const finalBlurGroup = new fabric.Group(pixels, {
+          left: width > 0 ? startX : e.pointer.x,
+          top: height > 0 ? startY : e.pointer.y,
+          selectable: true,
+          evented: true,
+        });
+
+        canvas.add(finalBlurGroup);
+        finalBlurGroup.bringToFront();
+        canvas.renderAll();
+      }
+
+      // Resetear el estado de dibujo
+      blurDrawingRef.current.isDrawing = false;
+
+      // Desactivar el modo de blur y restaurar la funcionalidad normal
+      setIsBlurMode(false);
+      canvas.selection = true;
+      canvas.forEachObject((obj) => {
+        obj.selectable = true;
+      });
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+    };
+
+    // Manejar tecla Escape para cancelar el modo de dibujo
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // Eliminar el blur temporal si existe
+        if (blurDrawingRef.current.tempBlur) {
+          canvas.remove(blurDrawingRef.current.tempBlur);
+          blurDrawingRef.current.tempBlur = null;
+        }
+
+        // Resetear el estado
+        blurDrawingRef.current.isDrawing = false;
+        setIsBlurMode(false);
+        canvas.selection = true;
+        canvas.forEachObject((obj) => {
+          obj.selectable = true;
+        });
+        canvas.defaultCursor = "default";
+        canvas.hoverCursor = "move";
+        canvas.renderAll();
+      }
+    };
+
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isBlurMode]);
+
   // Efecto para atajos de teclado globales
   useEffect(() => {
     const handleKeyboardShortcuts = (e: KeyboardEvent) => {
@@ -543,6 +721,15 @@ export const useCanvas = () => {
         target.isContentEditable
       ) {
         return;
+      }
+
+      // Atajos con Ctrl/Cmd
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        if (e.key.toLowerCase() === "d") {
+          e.preventDefault();
+          duplicateSelected();
+          return;
+        }
       }
 
       // Atajos con teclas solas
@@ -564,6 +751,10 @@ export const useCanvas = () => {
             e.preventDefault();
             addBlurBox();
             break;
+          case "n":
+            e.preventDefault();
+            addNumberedAnnotation();
+            break;
         }
       }
     };
@@ -572,7 +763,7 @@ export const useCanvas = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyboardShortcuts);
     };
-  }, [currentColor, currentFont]);
+  }, [currentColor, currentFont, annotationCounter]);
 
   const addImage = (imageUrl: string) => {
     if (!fabricCanvasRef.current) return;
@@ -807,35 +998,67 @@ export const useCanvas = () => {
   const addBlurBox = () => {
     if (!fabricCanvasRef.current) return;
 
+    // Activar el modo de dibujo de blur
+    setIsBlurMode(true);
     const canvas = fabricCanvasRef.current;
 
-    const blurRect = new fabric.Rect({
+    // Desactivar la selección de objetos mientras se dibuja
+    canvas.selection = false;
+    canvas.forEachObject((obj) => {
+      obj.selectable = false;
+    });
+
+    // Cambiar el cursor para indicar el modo de dibujo
+    canvas.defaultCursor = "crosshair";
+    canvas.hoverCursor = "crosshair";
+  };
+
+  const addNumberedAnnotation = () => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const radius = 30;
+
+    // Crear el círculo
+    const circle = new fabric.Circle({
+      radius: radius,
+      fill: currentColor,
+      stroke: currentColor,
+      strokeWidth: 3,
+      originX: "center",
+      originY: "center",
+      left: 0,
+      top: 0,
+      selectable: false,
+      evented: false,
+    });
+
+    // Crear el texto con el número
+    const text = new fabric.Text(annotationCounter.toString(), {
+      fontSize: 32,
+      fontFamily: "Montserrat, sans-serif",
+      fontWeight: "bold",
+      fill: "#ffffff",
+      originX: "center",
+      originY: "center",
+      left: 0,
+      top: 0,
+      selectable: false,
+      evented: false,
+    });
+
+    // Agrupar el círculo y el texto
+    const group = new fabric.Group([circle, text], {
       left: 100,
       top: 100,
-      width: 200,
-      height: 100,
-      fill: "rgba(0, 0, 0, 0.7)",
       selectable: true,
       evented: true,
       opacity: 0,
       scaleX: 0.5,
       scaleY: 0.5,
-    });
-
-    // Agregar efecto de texto censurado encima
-    const censorText = new fabric.Text("█████", {
-      left: 100,
-      top: 100,
-      fontSize: 40,
-      fill: "#000000",
-      selectable: false,
-      evented: false,
-      opacity: 0.8,
-    });
-
-    const group = new fabric.Group([blurRect, censorText], {
-      selectable: true,
-      evented: true,
+      // @ts-ignore - Propiedad personalizada para identificar anotaciones numeradas
+      isNumberedAnnotation: true,
     });
 
     canvas.add(group);
@@ -855,6 +1078,110 @@ export const useCanvas = () => {
       duration: 400,
       easing: fabric.util.ease.easeOutBack,
       onChange: canvas.renderAll.bind(canvas),
+    });
+
+    // Incrementar el contador para la siguiente anotación
+    setAnnotationCounter(annotationCounter + 1);
+  };
+
+  const resetAnnotationCounter = () => {
+    setAnnotationCounter(1);
+  };
+
+  const duplicateSelected = () => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const activeObject = canvas.getActiveObject();
+
+    if (!activeObject) return;
+
+    // @ts-ignore - Verificar si es una anotación numerada
+    if (activeObject.isNumberedAnnotation) {
+      // Para anotaciones numeradas, crear una nueva con el número siguiente
+      const radius = 30;
+
+      // Crear el círculo
+      const circle = new fabric.Circle({
+        radius: radius,
+        fill: currentColor,
+        stroke: currentColor,
+        strokeWidth: 3,
+        originX: "center",
+        originY: "center",
+        left: 0,
+        top: 0,
+        selectable: false,
+        evented: false,
+      });
+
+      // Crear el texto con el número actual del contador
+      const text = new fabric.Text(annotationCounter.toString(), {
+        fontSize: 32,
+        fontFamily: "Montserrat, sans-serif",
+        fontWeight: "bold",
+        fill: "#ffffff",
+        originX: "center",
+        originY: "center",
+        left: 0,
+        top: 0,
+        selectable: false,
+        evented: false,
+      });
+
+      // Agrupar el círculo y el texto
+      const group = new fabric.Group([circle, text], {
+        left: (activeObject.left || 0) + 20,
+        top: (activeObject.top || 0) + 20,
+        selectable: true,
+        evented: true,
+        scaleX: activeObject.scaleX,
+        scaleY: activeObject.scaleY,
+        angle: activeObject.angle,
+        // @ts-ignore - Propiedad personalizada
+        isNumberedAnnotation: true,
+      });
+
+      canvas.add(group);
+      group.bringToFront();
+
+      // Seleccionar el nuevo objeto
+      canvas.setActiveObject(group);
+      canvas.requestRenderAll();
+
+      // Incrementar el contador
+      setAnnotationCounter(annotationCounter + 1);
+      return;
+    }
+
+    // Clonar objetos normales
+    activeObject.clone((cloned: fabric.Object) => {
+      // Descartar la selección actual
+      canvas.discardActiveObject();
+
+      // Configurar la posición del objeto clonado (offset de 20px)
+      cloned.set({
+        left: (cloned.left || 0) + 20,
+        top: (cloned.top || 0) + 20,
+        evented: true,
+      });
+
+      // Si es una selección múltiple, clonar cada objeto
+      if (cloned.type === "activeSelection") {
+        cloned.canvas = canvas;
+        (cloned as fabric.ActiveSelection).forEachObject(
+          (obj: fabric.Object) => {
+            canvas.add(obj);
+          }
+        );
+        cloned.setCoords();
+      } else {
+        canvas.add(cloned);
+      }
+
+      // Seleccionar el objeto clonado
+      canvas.setActiveObject(cloned);
+      canvas.requestRenderAll();
     });
   };
 
@@ -1084,6 +1411,10 @@ export const useCanvas = () => {
     addRectangle,
     addCircle,
     addBlurBox,
+    addNumberedAnnotation,
+    resetAnnotationCounter,
+    annotationCounter,
+    duplicateSelected,
     clearCanvas,
     downloadImage,
     copyToClipboard,
