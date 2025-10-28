@@ -181,56 +181,59 @@ const ImageEditor: React.FC = () => {
           <h1 className="text-3xl font-bold text-white mb-6 text-center">
             Editor de Imágenes
           </h1>
+          <div className="flex items-start justify-center gap-6 mb-4">
+            <div className="flex flex-col items-center">
+              {/* Selector de Color Global */}
+              <div className="mb-4 flex flex-col items-center">
+                <label className="block text-sm font-medium text-white mb-2">
+                  Color de los elementos dinamicos
+                </label>
+                <div className="flex gap-3 items-center">
+                  {/* Colores predefinidos */}
+                  {AVAILABLE_COLORS.map(({ color, title }) => (
+                    <button
+                      key={color}
+                      onClick={() => setCurrentColor(color)}
+                      className={`w-10 h-10 rounded-full border-2 ${
+                        currentColor === color
+                          ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
+                          : "border-gray-500"
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={title}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
 
-          {/* Selector de Color Global */}
-          <div className="mb-4 flex flex-col items-center">
-            <label className="block text-sm font-medium text-white mb-2">
-              Color de los elementos dinamicos
-            </label>
-            <div className="flex gap-3 items-center">
-              {/* Colores predefinidos */}
-              {AVAILABLE_COLORS.map(({ color, title }) => (
+            {/* Selector de Fondo del Canvas */}
+            <div className="flex flex-col items-center">
+              <label className="block text-sm font-medium text-white mb-2">
+                Color de fondo del canvas
+              </label>
+              <div className="flex gap-3 items-center">
                 <button
-                  key={color}
-                  onClick={() => setCurrentColor(color)}
-                  className={`w-10 h-10 rounded-full border-2 ${
-                    currentColor === color
+                  onClick={() => handleBackgroundChange("#ffffff")}
+                  className={`w-10 h-10 rounded-lg border-2 ${
+                    canvasBackground === "#ffffff"
                       ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
                       : "border-gray-500"
                   }`}
-                  style={{ backgroundColor: color }}
-                  title={title}
+                  style={{ backgroundColor: "#ffffff" }}
+                  title="Fondo Blanco"
                 />
-              ))}
-            </div>
-          </div>
-
-          {/* Selector de Fondo del Canvas */}
-          <div className="mb-6 flex flex-col items-center">
-            <label className="block text-sm font-medium text-white mb-2">
-              Color de fondo del canvas
-            </label>
-            <div className="flex gap-3 items-center">
-              <button
-                onClick={() => handleBackgroundChange("#ffffff")}
-                className={`w-12 h-12 rounded-lg border-2 ${
-                  canvasBackground === "#ffffff"
-                    ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
-                    : "border-gray-500"
-                }`}
-                style={{ backgroundColor: "#ffffff" }}
-                title="Fondo Blanco"
-              />
-              <button
-                onClick={() => handleBackgroundChange("#000000")}
-                className={`w-12 h-12 rounded-lg border-2 ${
-                  canvasBackground === "#000000"
-                    ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
-                    : "border-gray-500"
-                }`}
-                style={{ backgroundColor: "#000000" }}
-                title="Fondo Negro"
-              />
+                <button
+                  onClick={() => handleBackgroundChange("#000000")}
+                  className={`w-10 h-10 rounded-lg border-2 ${
+                    canvasBackground === "#000000"
+                      ? "border-white ring-2 ring-offset-2 ring-white ring-offset-gray-800"
+                      : "border-gray-500"
+                  }`}
+                  style={{ backgroundColor: "#000000" }}
+                  title="Fondo Negro"
+                />
+              </div>
             </div>
           </div>
 
