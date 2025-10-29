@@ -1,37 +1,30 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
-interface TooltipProps {
-  children: React.ReactNode;
-  content: string;
-}
+import { cn } from "@/lib/utils"
 
-export const Tooltip: React.FC<TooltipProps> = ({ children, content }) => {
-  const [isVisible, setIsVisible] = React.useState(false);
+const TooltipProvider = TooltipPrimitive.Provider
 
-  return (
-    <div className="relative inline-block">
-      <div
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
-      >
-        {children}
-      </div>
-      {isVisible && (
-        <div
-          className={cn(
-            "absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded",
-            "bottom-full left-1/2 transform -translate-x-1/2 mb-2",
-            "whitespace-nowrap pointer-events-none",
-            "animate-in fade-in-0 zoom-in-95"
-          )}
-        >
-          {content}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-            <div className="border-4 border-transparent border-t-gray-900" />
-          </div>
-        </div>
+const Tooltip = TooltipPrimitive.Root
+
+const TooltipTrigger = TooltipPrimitive.Trigger
+
+const TooltipContent = React.forwardRef<
+  React.ElementRef<typeof TooltipPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
+>(({ className, sideOffset = 4, ...props }, ref) => (
+  <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Content
+      ref={ref}
+      sideOffset={sideOffset}
+      className={cn(
+        "z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-tooltip-content-transform-origin]",
+        className
       )}
-    </div>
-  );
-};
+      {...props}
+    />
+  </TooltipPrimitive.Portal>
+))
+TooltipContent.displayName = TooltipPrimitive.Content.displayName
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
