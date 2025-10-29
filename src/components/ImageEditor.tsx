@@ -335,7 +335,7 @@ const ImageEditor: React.FC = () => {
 
           {/* Área principal con canvas */}
           <SidebarInset className="flex-1">
-            <div className="flex flex-col h-screen">
+            <div className="flex flex-col h-screen relative">
               {/* Header con título y trigger */}
               <header className="flex h-16 shrink-0 items-center gap-4 border-b border-gray-700 px-6 bg-gray-800">
                 <SidebarTrigger className="text-white" />
@@ -621,7 +621,17 @@ const ImageEditor: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-center">
+                  <div className="flex justify-center items-end gap-6">
+                    {/* Marca de agua - Favicon */}
+                    <div className="mb-4 opacity-50 transition-opacity duration-300 absolute bottom-0 -right-[0px] z-20">
+                      <img
+                        src="/favicon.png"
+                        alt="Watermark"
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Canvas */}
                     <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
                       <canvas
                         ref={canvasRef}
