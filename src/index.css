@@ -38,6 +38,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -78,7 +79,79 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Driver.js Custom Styles for Dark Theme */
+.driver-popover {
+  background: rgb(31, 41, 55) !important;
+  color: rgb(229, 231, 235) !important;
+  border: 1px solid rgb(75, 85, 99) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3) !important;
+}
+
+.driver-popover-title {
+  color: rgb(255, 255, 255) !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.driver-popover-description {
+  color: rgb(209, 213, 219) !important;
+  font-size: 0.9375rem !important;
+  line-height: 1.5 !important;
+}
+
+.driver-popover-footer {
+  margin-top: 1rem !important;
+}
+
+.driver-popover-progress-text {
+  color: rgb(156, 163, 175) !important;
+  font-size: 0.875rem !important;
+}
+
+.driver-popover-prev-btn,
+.driver-popover-next-btn,
+.driver-popover-close-btn {
+  background: rgb(59, 130, 246) !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.375rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.driver-popover-prev-btn:hover,
+.driver-popover-next-btn:hover {
+  background: rgb(37, 99, 235) !important;
+  transform: translateY(-1px) !important;
+}
+
+.driver-popover-close-btn {
+  background: rgb(75, 85, 99) !important;
+}
+
+.driver-popover-close-btn:hover {
+  background: rgb(55, 65, 81) !important;
+}
+
+.driver-popover-arrow-side-left.driver-popover-arrow,
+.driver-popover-arrow-side-right.driver-popover-arrow,
+.driver-popover-arrow-side-top.driver-popover-arrow,
+.driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-color: rgb(31, 41, 55) !important;
+}
+
+/* Highlight styling */
+.driver-active-element {
+  position: relative !important;
+  z-index: 9999 !important;
 }

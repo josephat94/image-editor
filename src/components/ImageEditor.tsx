@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useCanvas } from "@/hooks/useCanvas";
+import { useTour } from "@/hooks/useTour";
+import { LayersPanel } from "@/components/LayersPanel";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -35,7 +37,13 @@ import {
   Hash,
   RotateCcw,
   CopyPlus,
+  Scissors,
+  Loader2,
+  HelpCircle,
+  ChevronsUp,
+  ChevronsDown,
 } from "lucide-react";
+import type { DriveStep } from "driver.js";
 
 // Component Helper for Tooltip
 const TooltipButton = ({
@@ -89,13 +97,127 @@ const ImageEditor: React.FC = () => {
     currentColor,
     setCurrentColor,
     setBackgroundColor,
+    removeImageBackground,
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackwards,
+    getLayersList,
+    selectLayer,
+    deleteLayer,
+    layersVersion,
   } = useCanvas();
+  const { startTour, hasCompletedTour } = useTour();
   const [textInput, setTextInput] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const [bgRemovalError, setBgRemovalError] = useState<string | null>(null);
   const [canvasBackground, setCanvasBackground] = useState<
     "#ffffff" | "#000000"
   >("#ffffff");
+  const [layers, setLayers] = useState(getLayersList());
+
+  // Definir los pasos del tour
+  const tourSteps: DriveStep[] = [
+    {
+      element: "#editor-header",
+      popover: {
+        title: "¡Bienvenido al Editor de Imágenes! 🎨",
+        description:
+          "Esta es una herramienta profesional para editar y anotar imágenes. Te guiaré por las funciones principales en unos segundos.",
+        side: "bottom",
+        align: "center",
+      },
+    },
+    {
+      element: "#file-upload-section",
+      popover: {
+        title: "Cargar Imágenes 📁",
+        description:
+          "Puedes subir una imagen haciendo clic aquí o simplemente pegándola con <strong>Cmd+V</strong> (o Ctrl+V en Windows).",
+        side: "bottom",
+        align: "start",
+      },
+    },
+    {
+      element: "#color-selector",
+      popover: {
+        title: "Selector de Colores 🎨",
+        description:
+          "Elige el color que quieres usar para tus anotaciones y elementos. El color se aplicará a flechas, formas, texto y más.",
+        side: "right",
+        align: "start",
+      },
+    },
+    {
+      element: "#tools-section",
+      popover: {
+        title: "Herramientas de Anotación ✏️",
+        description:
+          "Aquí encontrarás todas las herramientas: flechas, formas, texto, censura y anotaciones numeradas. Cada herramienta tiene un atajo de teclado.",
+        side: "bottom",
+        align: "center",
+      },
+    },
+    {
+      element: "#remove-bg-button",
+      popover: {
+        title: "Remover Fondo con IA 🤖",
+        description:
+          "Esta función usa inteligencia artificial para eliminar el fondo de tus imágenes automáticamente. Presiona <strong>F</strong> para activarla.",
+        side: "bottom",
+        align: "center",
+      },
+    },
+    {
+      element: "#annotation-counter",
+      popover: {
+        title: "Anotaciones Numeradas 🔢",
+        description:
+          "Crea anotaciones numeradas secuencialmente. Perfecto para tutoriales. Presiona <strong>N</strong> para agregar una anotación.",
+        side: "right",
+        align: "center",
+      },
+    },
+    {
+      element: "#layers-panel",
+      popover: {
+        title: "Panel de Capas 📚",
+        description:
+          "Gestiona el orden de tus elementos. Usa <strong>[</strong> y <strong>]</strong> para mover capas, o <strong>Ctrl+[</strong> y <strong>Ctrl+]</strong> para enviar al fondo/traer al frente.",
+        side: "right",
+        align: "center",
+      },
+    },
+    {
+      element: "#actions-section",
+      popover: {
+        title: "Exportar tu Trabajo 💾",
+        description:
+          "Cuando termines, puedes copiar al portapapeles o descargar tu imagen. ¡También puedes limpiar todo para empezar de nuevo!",
+        side: "bottom",
+        align: "end",
+      },
+    },
+    {
+      popover: {
+        title: "¡Listo para empezar! 🚀",
+        description:
+          "Usa los atajos de teclado para trabajar más rápido:<br/><br/>" +
+          "• <strong>T</strong> - Añadir texto<br/>" +
+          "• <strong>A</strong> - Flecha<br/>" +
+          "• <strong>R</strong> - Rectángulo<br/>" +
+          "• <strong>C</strong> - Círculo<br/>" +
+          "• <strong>B</strong> - Censurar<br/>" +
+          "• <strong>N</strong> - Anotación numerada<br/>" +
+          "• <strong>F</strong> - Remover fondo<br/>" +
+          "• <strong>Ctrl+Z</strong> - Deshacer<br/>" +
+          "• <strong>Ctrl+Shift+Z</strong> - Rehacer<br/>" +
+          "• <strong>Delete</strong> - Eliminar selección",
+      },
+    },
+  ];
 
   // Manejar pegar imagen con Cmd+V
   useEffect(() => {
@@ -162,6 +284,23 @@ const ImageEditor: React.FC = () => {
     setBackgroundColor(color);
   };
 
+  const handleRemoveBackground = async () => {
+    setIsRemovingBg(true);
+    setBgRemovalError(null);
+
+    const result = await removeImageBackground();
+
+    setIsRemovingBg(false);
+
+    if (!result.success) {
+      setBgRemovalError(result.error || "Error desconocido");
+      // Limpiar el error después de 5 segundos
+      setTimeout(() => {
+        setBgRemovalError(null);
+      }, 5000);
+    }
+  };
+
   // Manejar atajo de teclado para texto (T)
   useEffect(() => {
     const handleTextShortcut = (e: KeyboardEvent) => {
@@ -216,6 +355,82 @@ const ImageEditor: React.FC = () => {
     };
   }, [undo, redo]);
 
+  // Manejar evento personalizado para remover fondo (tecla F)
+  useEffect(() => {
+    const handleRemoveBgEvent = () => {
+      handleRemoveBackground();
+    };
+
+    window.addEventListener("removeBackground", handleRemoveBgEvent);
+    return () => {
+      window.removeEventListener("removeBackground", handleRemoveBgEvent);
+    };
+  }, [isRemovingBg]);
+
+  // Iniciar el tour automáticamente si es la primera vez
+  useEffect(() => {
+    if (isReady && !hasCompletedTour()) {
+      // Esperar un poco para que el DOM esté completamente renderizado
+      setTimeout(() => {
+        startTour(tourSteps);
+      }, 500);
+    }
+  }, [isReady]);
+
+  // Función para reiniciar el tour manualmente
+  const handleRestartTour = () => {
+    startTour(tourSteps);
+  };
+
+  // Actualizar la lista de capas cuando cambia layersVersion
+  useEffect(() => {
+    setLayers(getLayersList());
+  }, [layersVersion]);
+
+  // Atajos de teclado para control de capas
+  useEffect(() => {
+    const handleLayerShortcuts = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // [ = Bajar una capa
+      if (e.key === "[" && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        e.preventDefault();
+        sendBackwards();
+      }
+
+      // ] = Subir una capa
+      if (e.key === "]" && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        e.preventDefault();
+        bringForward();
+      }
+
+      // Ctrl/Cmd + [ = Enviar al fondo
+      if (e.key === "[" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        sendToBack();
+      }
+
+      // Ctrl/Cmd + ] = Traer al frente
+      if (e.key === "]" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        bringToFront();
+      }
+    };
+
+    document.addEventListener("keydown", handleLayerShortcuts);
+    return () => {
+      document.removeEventListener("keydown", handleLayerShortcuts);
+    };
+  }, [bringToFront, sendToBack, bringForward, sendBackwards]);
+
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
@@ -229,7 +444,7 @@ const ImageEditor: React.FC = () => {
             </SidebarHeader>
             <SidebarContent className="bg-gray-900">
               {/* Selector de Color Global */}
-              <SidebarGroup>
+              <SidebarGroup id="color-selector">
                 <SidebarGroupLabel className="text-gray-200 font-semibold">
                   Color de elementos
                 </SidebarGroupLabel>
@@ -255,7 +470,7 @@ const ImageEditor: React.FC = () => {
               <Separator className="bg-gray-700" />
 
               {/* Contador de Anotaciones */}
-              <SidebarGroup>
+              <SidebarGroup id="annotation-counter">
                 <SidebarGroupLabel className="text-gray-200 font-semibold">
                   Anotaciones numeradas
                 </SidebarGroupLabel>
@@ -287,6 +502,30 @@ const ImageEditor: React.FC = () => {
                     </kbd>{" "}
                     para agregar
                   </p>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              <Separator className="bg-gray-700" />
+
+              {/* Panel de Capas */}
+              <SidebarGroup
+                id="layers-panel"
+                className="flex-1 flex flex-col min-h-0"
+              >
+                <SidebarGroupLabel className="text-gray-200 font-semibold">
+                  Capas ({layers.length})
+                </SidebarGroupLabel>
+                <SidebarGroupContent className="flex-1 overflow-hidden px-0">
+                  <LayersPanel
+                    layers={layers}
+                    onSelectLayer={selectLayer}
+                    onDeleteLayer={deleteLayer}
+                    onBringToFront={bringToFront}
+                    onSendToBack={sendToBack}
+                    onBringForward={bringForward}
+                    onSendBackwards={sendBackwards}
+                    layersVersion={layersVersion}
+                  />
                 </SidebarGroupContent>
               </SidebarGroup>
 
@@ -337,12 +576,27 @@ const ImageEditor: React.FC = () => {
           <SidebarInset className="flex-1">
             <div className="flex flex-col h-screen relative">
               {/* Header con título y trigger */}
-              <header className="flex h-16 shrink-0 items-center gap-4 border-b border-gray-700 px-6 bg-gray-800">
+              <header
+                id="editor-header"
+                className="flex h-16 shrink-0 items-center gap-4 border-b border-gray-700 px-6 bg-gray-800"
+              >
                 <SidebarTrigger className="text-white" />
                 <Separator orientation="vertical" className="h-6 bg-gray-600" />
                 <h1 className="text-xl font-bold text-white">
                   Editor de Imágenes
                 </h1>
+                <div className="ml-auto">
+                  <TooltipButton content="Ver tour de bienvenida">
+                    <Button
+                      onClick={handleRestartTour}
+                      variant="ghost"
+                      size="icon"
+                      className="text-gray-300 hover:text-white"
+                    >
+                      <HelpCircle className="w-5 h-5" />
+                    </Button>
+                  </TooltipButton>
+                </div>
               </header>
 
               {/* Contenido principal */}
@@ -368,11 +622,30 @@ const ImageEditor: React.FC = () => {
                       para eliminar elementos seleccionados
                     </p>
 
+                    {/* Mensaje de error para remover fondo */}
+                    {bgRemovalError && (
+                      <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
+                        ⚠️ {bgRemovalError}
+                      </div>
+                    )}
+
+                    {/* Mensaje de procesamiento */}
+                    {isRemovingBg && (
+                      <div className="bg-blue-500/20 border border-blue-500 text-blue-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
+                        <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                        Removiendo fondo con IA... Esto puede tardar unos
+                        segundos
+                      </div>
+                    )}
+
                     {/* Toolbar Profesional */}
                     <div className="bg-gray-700 rounded-lg p-4 shadow-inner">
                       <div className="flex flex-wrap gap-3 justify-center items-center">
                         {/* Sección: Archivo */}
-                        <div className="flex gap-2 items-center">
+                        <div
+                          id="file-upload-section"
+                          className="flex gap-2 items-center"
+                        >
                           <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
                             Archivo
                           </div>
@@ -433,13 +706,36 @@ const ImageEditor: React.FC = () => {
                               <CopyPlus className="w-4 h-4" />
                             </Button>
                           </TooltipButton>
+
+                          <TooltipButton content="Traer al frente (Ctrl+])">
+                            <Button
+                              onClick={bringToFront}
+                              variant="outline"
+                              size="icon"
+                            >
+                              <ChevronsUp className="w-4 h-4" />
+                            </Button>
+                          </TooltipButton>
+
+                          <TooltipButton content="Enviar al fondo (Ctrl+[)">
+                            <Button
+                              onClick={sendToBack}
+                              variant="outline"
+                              size="icon"
+                            >
+                              <ChevronsDown className="w-4 h-4" />
+                            </Button>
+                          </TooltipButton>
                         </div>
 
                         {/* Divisor */}
                         <div className="h-8 w-px bg-gray-600" />
 
                         {/* Sección: Herramientas */}
-                        <div className="flex gap-2 items-center">
+                        <div
+                          id="tools-section"
+                          className="flex gap-2 items-center"
+                        >
                           <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
                             Herramientas
                           </div>
@@ -502,13 +798,33 @@ const ImageEditor: React.FC = () => {
                               <Type className="w-4 h-4" />
                             </Button>
                           </TooltipButton>
+
+                          <TooltipButton content="Remover Fondo IA (F)">
+                            <Button
+                              id="remove-bg-button"
+                              onClick={handleRemoveBackground}
+                              variant="outline"
+                              size="icon"
+                              disabled={isRemovingBg}
+                              className="relative"
+                            >
+                              {isRemovingBg ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Scissors className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </TooltipButton>
                         </div>
 
                         {/* Divisor */}
                         <div className="h-8 w-px bg-gray-600" />
 
                         {/* Sección: Acciones */}
-                        <div className="flex gap-2 items-center">
+                        <div
+                          id="actions-section"
+                          className="flex gap-2 items-center"
+                        >
                           <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
                             Acciones
                           </div>
@@ -623,7 +939,7 @@ const ImageEditor: React.FC = () => {
 
                   <div className="flex justify-center items-end gap-6">
                     {/* Marca de agua - Favicon */}
-                    <div className="mb-4 opacity-50 transition-opacity duration-300 absolute bottom-0 -right-[0px] z-20">
+                    <div className="mb-4 opacity-50 transition-opacity duration-300 absolute bottom-0 right-[16px] z-20">
                       <img
                         src="/favicon.png"
                         alt="Watermark"

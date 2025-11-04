@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fabric } from "fabric";
+import { removeBackground } from "@imgly/background-removal";
+import type { Config } from "@imgly/background-removal";
 
 export const useCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -12,6 +14,7 @@ export const useCanvas = () => {
   const [isRectangleMode, setIsRectangleMode] = useState(false);
   const [isCircleMode, setIsCircleMode] = useState(false);
   const [annotationCounter, setAnnotationCounter] = useState(1);
+  const [layersVersion, setLayersVersion] = useState(0); // Para forzar re-render de la lista de capas
 
   // Estado para Undo/Redo
   const historyRef = useRef<string[]>([]);
@@ -77,6 +80,7 @@ export const useCanvas = () => {
       width: 1200,
       height: 800,
       backgroundColor: "#ffffff",
+      preserveObjectStacking: true, // Respetar z-index incluso con objetos seleccionados
     });
 
     fabricCanvasRef.current = canvas;
@@ -86,9 +90,18 @@ export const useCanvas = () => {
     saveCanvasState();
 
     // Listeners para detectar cambios en el canvas
-    canvas.on("object:added", () => saveCanvasState());
-    canvas.on("object:modified", () => saveCanvasState());
-    canvas.on("object:removed", () => saveCanvasState());
+    canvas.on("object:added", () => {
+      saveCanvasState();
+      setLayersVersion((v) => v + 1);
+    });
+    canvas.on("object:modified", () => {
+      saveCanvasState();
+      setLayersVersion((v) => v + 1);
+    });
+    canvas.on("object:removed", () => {
+      saveCanvasState();
+      setLayersVersion((v) => v + 1);
+    });
 
     // Agregar efecto de transparencia al mover objetos
     canvas.on("object:moving", (e) => {
@@ -755,6 +768,11 @@ export const useCanvas = () => {
             e.preventDefault();
             addNumberedAnnotation();
             break;
+          case "f":
+            e.preventDefault();
+            // Disparar un evento personalizado para que ImageEditor.tsx lo maneje
+            window.dispatchEvent(new CustomEvent("removeBackground"));
+            break;
         }
       }
     };
@@ -1401,6 +1419,239 @@ export const useCanvas = () => {
     fabricCanvasRef.current.renderAll();
   };
 
+  // Funciones de control de capas (z-index)
+  const bringToFront = () => {
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+    const activeObject = canvas.getActiveObject();
+
+    if (!activeObject) return;
+
+    canvas.bringToFront(activeObject);
+    activeObject.setCoords(); // Actualizar coordenadas del objeto
+    canvas.discardActiveObject(); // Deseleccionar temporalmente
+    canvas.setActiveObject(activeObject); // Re-seleccionar para actualizar controles
+    canvas.requestRenderAll(); // Forzar re-render completo
+    setLayersVersion((v) => v + 1);
+  };
+
+  const sendToBack = () => {
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+    const activeObject = canvas.getActiveObject();
+
+    if (!activeObject) return;
+
+    canvas.sendToBack(activeObject);
+    activeObject.setCoords(); // Actualizar coordenadas del objeto
+    canvas.discardActiveObject(); // Deseleccionar temporalmente
+    canvas.setActiveObject(activeObject); // Re-seleccionar para actualizar controles
+    canvas.requestRenderAll(); // Forzar re-render completo
+    setLayersVersion((v) => v + 1);
+  };
+
+  const bringForward = () => {
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+    const activeObject = canvas.getActiveObject();
+
+    if (!activeObject) return;
+
+    canvas.bringForward(activeObject);
+    activeObject.setCoords(); // Actualizar coordenadas del objeto
+    canvas.discardActiveObject(); // Deseleccionar temporalmente
+    canvas.setActiveObject(activeObject); // Re-seleccionar para actualizar controles
+    canvas.requestRenderAll(); // Forzar re-render completo
+    setLayersVersion((v) => v + 1);
+  };
+
+  const sendBackwards = () => {
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+    const activeObject = canvas.getActiveObject();
+
+    if (!activeObject) return;
+
+    canvas.sendBackwards(activeObject);
+    activeObject.setCoords(); // Actualizar coordenadas del objeto
+    canvas.discardActiveObject(); // Deseleccionar temporalmente
+    canvas.setActiveObject(activeObject); // Re-seleccionar para actualizar controles
+    canvas.requestRenderAll(); // Forzar re-render completo
+    setLayersVersion((v) => v + 1);
+  };
+
+  // Obtener información de las capas
+  const getLayersList = () => {
+    if (!fabricCanvasRef.current) return [];
+
+    const canvas = fabricCanvasRef.current;
+    const objects = canvas.getObjects();
+
+    return objects
+      .map((obj, index) => {
+        let layerType = "Objeto";
+        let layerName = "";
+
+        // Determinar el tipo de capa
+        if (obj.type === "image") {
+          layerType = "Imagen";
+          layerName = "Imagen";
+        } else if (obj.type === "text") {
+          layerType = "Texto";
+          layerName = (obj as fabric.Text).text?.substring(0, 20) || "Texto";
+        } else if (obj.type === "group") {
+          // @ts-ignore - Verificar si es una anotación numerada
+          if (obj.isNumberedAnnotation) {
+            layerType = "Anotación";
+            const textObj = (
+              obj as fabric.Group
+            ).getObjects()[1] as fabric.Text;
+            layerName = `Anotación #${textObj.text}`;
+          } else {
+            layerType = "Grupo";
+            layerName = "Blur/Flecha";
+          }
+        } else if (obj.type === "rect") {
+          layerType = "Rectángulo";
+          layerName = "Rectángulo";
+        } else if (obj.type === "circle") {
+          layerType = "Círculo";
+          layerName = "Círculo";
+        }
+
+        return {
+          id: index,
+          object: obj,
+          type: layerType,
+          name: layerName,
+          isSelected: obj === canvas.getActiveObject(),
+        };
+      })
+      .reverse(); // Invertir para mostrar las capas superiores primero
+  };
+
+  // Seleccionar una capa específica
+  const selectLayer = (layerIndex: number) => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const objects = canvas.getObjects();
+    const actualIndex = objects.length - 1 - layerIndex; // Invertir índice
+    const object = objects[actualIndex];
+
+    if (object) {
+      canvas.setActiveObject(object);
+      canvas.renderAll();
+      setLayersVersion((v) => v + 1);
+    }
+  };
+
+  // Eliminar una capa específica
+  const deleteLayer = (layerIndex: number) => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const objects = canvas.getObjects();
+    const actualIndex = objects.length - 1 - layerIndex; // Invertir índice
+    const object = objects[actualIndex];
+
+    if (object) {
+      canvas.remove(object);
+      canvas.renderAll();
+      setLayersVersion((v) => v + 1);
+    }
+  };
+
+  const removeImageBackground = async () => {
+    if (!fabricCanvasRef.current)
+      return { success: false, error: "Canvas no disponible" };
+
+    const canvas = fabricCanvasRef.current;
+    const activeObject = canvas.getActiveObject();
+
+    // Verificar si hay un objeto seleccionado y si es una imagen
+    if (!activeObject) {
+      return {
+        success: false,
+        error: "Por favor, selecciona una imagen primero",
+      };
+    }
+
+    if (activeObject.type !== "image") {
+      return {
+        success: false,
+        error: "Por favor, selecciona una imagen (no texto ni formas)",
+      };
+    }
+
+    try {
+      const imageObject = activeObject as fabric.Image;
+
+      // Convertir el objeto Fabric.js a Blob
+      const imageDataUrl = imageObject.toDataURL({ format: "png" });
+
+      // Convertir dataURL a Blob
+      const response = await fetch(imageDataUrl);
+      const imageBlob = await response.blob();
+
+      console.log("Iniciando remoción de fondo...", imageBlob);
+
+      // Configuración para la remoción de fondo
+      const config: Config = {
+        debug: true,
+        progress: (key: string, current: number, total: number) => {
+          console.log(`Progreso: ${key} - ${current}/${total}`);
+        },
+      };
+
+      // Remover el fondo usando IA
+      const blob = await removeBackground(imageBlob, config);
+
+      console.log("Fondo removido exitosamente", blob);
+
+      // Convertir blob a URL
+      const url = URL.createObjectURL(blob);
+
+      // Crear una nueva imagen sin fondo
+      fabric.Image.fromURL(url, (newImg) => {
+        if (!fabricCanvasRef.current) return;
+
+        // Copiar las propiedades de la imagen original
+        newImg.set({
+          left: imageObject.left,
+          top: imageObject.top,
+          scaleX: imageObject.scaleX,
+          scaleY: imageObject.scaleY,
+          angle: imageObject.angle,
+          opacity: imageObject.opacity,
+          selectable: true,
+          evented: true,
+        });
+
+        // Eliminar la imagen original
+        canvas.remove(imageObject);
+
+        // Agregar la nueva imagen sin fondo
+        canvas.add(newImg);
+        newImg.setCoords();
+        canvas.setActiveObject(newImg);
+        canvas.renderAll();
+
+        // Liberar la URL temporal
+        URL.revokeObjectURL(url);
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error al remover fondo:", error);
+      return {
+        success: false,
+        error:
+          "Error al procesar la imagen. Intenta con una imagen más pequeña.",
+      };
+    }
+  };
+
   return {
     canvasRef,
     fabricCanvas: fabricCanvasRef.current,
@@ -1428,5 +1679,15 @@ export const useCanvas = () => {
     isBlurMode,
     setIsBlurMode,
     setBackgroundColor,
+    removeImageBackground,
+    // Funciones de control de capas
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackwards,
+    getLayersList,
+    selectLayer,
+    deleteLayer,
+    layersVersion,
   };
 };

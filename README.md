@@ -6,8 +6,14 @@ Una aplicación web moderna para editar imágenes con captura de pantalla, const
 
 - 📸 **Pegar imágenes con Cmd+V**: Simplemente pega una captura de pantalla o imagen desde el portapapeles
 - 📁 **Subir archivos**: Arrastra y suelta o selecciona imágenes desde tu computadora
+- ✂️ **Remover Fondo con IA**: Elimina el fondo de cualquier imagen automáticamente (100% gratis, funciona en el navegador)
 - ➡️ **Agregar flechas**: Herramienta para señalar elementos importantes en la imagen
-- 📝 **Agregar texto**: Añade anotaciones de texto personalizables
+- 📝 **Agregar texto**: Añade anotaciones de texto personalizables con fuentes personalizadas
+- 🔲 **Formas**: Rectángulos, círculos y anotaciones numeradas
+- 👁️ **Censurar**: Efecto pixelado para ocultar información sensible
+- 🎨 **Selector de colores**: 6 colores predefinidos para personalizar elementos
+- 🔄 **Undo/Redo**: Deshacer y rehacer cambios (Ctrl+Z / Ctrl+Shift+Z)
+- 📋 **Copiar al portapapeles**: Copia directamente al portapapeles para pegar en otras apps
 - 🎨 **Interfaz moderna**: Diseño limpio y responsivo con Tailwind CSS
 - 💾 **Descargar**: Guarda tu imagen editada en formato PNG
 
@@ -19,6 +25,7 @@ Una aplicación web moderna para editar imágenes con captura de pantalla, const
 - **Tailwind CSS** - Framework de CSS utilitario
 - **shadcn/ui** - Componentes de UI modernos
 - **Fabric.js** - Biblioteca de canvas para manipulación de imágenes
+- **@imgly/background-removal** - IA para remover fondos de imágenes (gratis, local)
 - **Lucide React** - Iconos SVG
 
 ## Instalación
@@ -41,10 +48,30 @@ npm run dev
 
 1. **Pegar imagen**: Usa `Cmd+V` (Mac) o `Ctrl+V` (Windows/Linux) para pegar una imagen desde el portapapeles
 2. **Subir archivo**: Haz clic en "Subir Imagen" para seleccionar un archivo desde tu computadora
-3. **Agregar flecha**: Haz clic en "Agregar Flecha" para añadir una flecha roja
-4. **Agregar texto**: Haz clic en "Agregar Texto", escribe tu mensaje y presiona Enter
-5. **Limpiar**: Usa "Limpiar" para borrar todo el contenido del canvas
-6. **Descargar**: Haz clic en "Descargar" para guardar tu imagen editada
+3. **Remover fondo**: Selecciona una imagen y presiona `F` o haz clic en el botón de tijeras ✂️ para eliminar el fondo automáticamente con IA
+4. **Agregar flecha**: Presiona `A` o haz clic en el botón para dibujar una flecha
+5. **Agregar texto**: Presiona `T` o haz clic en "Agregar Texto", escribe tu mensaje y presiona Enter
+6. **Formas**: Presiona `R` para rectángulo, `C` para círculo, `N` para anotación numerada
+7. **Censurar**: Presiona `B` para crear un área pixelada
+8. **Deshacer/Rehacer**: Usa `Ctrl+Z` para deshacer, `Ctrl+Shift+Z` para rehacer
+9. **Duplicar**: Selecciona un elemento y presiona `Ctrl+D` para duplicarlo
+10. **Copiar al portapapeles**: Haz clic en el botón de copiar para copiar la imagen editada
+11. **Descargar**: Haz clic en "Descargar" para guardar tu imagen editada en PNG
+
+### 🎯 Atajos de Teclado
+
+- `Cmd+V` / `Ctrl+V` - Pegar imagen
+- `F` - Remover fondo de imagen seleccionada
+- `A` - Agregar flecha
+- `R` - Agregar rectángulo
+- `C` - Agregar círculo
+- `B` - Agregar área censurada (blur)
+- `N` - Agregar anotación numerada
+- `T` - Agregar texto
+- `Ctrl+Z` / `Cmd+Z` - Deshacer
+- `Ctrl+Shift+Z` / `Cmd+Shift+Z` - Rehacer
+- `Ctrl+D` / `Cmd+D` - Duplicar elemento seleccionado
+- `Delete` / `Backspace` - Eliminar elemento seleccionado
 
 ## Estructura del Proyecto
 
