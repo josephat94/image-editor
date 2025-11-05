@@ -106,6 +106,7 @@ const ImageEditor: React.FC = () => {
     getLayersList,
     selectLayer,
     deleteLayer,
+    reorderLayers,
     layersVersion,
     getHistoryList,
     goToHistoryState,
@@ -191,7 +192,7 @@ const ImageEditor: React.FC = () => {
       popover: {
         title: "Panel de Capas 📚",
         description:
-          "Gestiona el orden de tus elementos. Usa <strong>[</strong> y <strong>]</strong> para mover capas, o <strong>Ctrl+[</strong> y <strong>Ctrl+]</strong> para enviar al fondo/traer al frente.",
+          "Gestiona el orden de tus elementos con <strong>drag and drop</strong> arrastrando el ícono de agarre. También puedes usar <strong>[</strong> y <strong>]</strong> para mover capas, o <strong>Ctrl+[</strong> y <strong>Ctrl+]</strong> para enviar al fondo/traer al frente.",
         side: "right",
         align: "center",
       },
@@ -545,6 +546,7 @@ const ImageEditor: React.FC = () => {
                     onSendToBack={sendToBack}
                     onBringForward={bringForward}
                     onSendBackwards={sendBackwards}
+                    onReorderLayers={reorderLayers}
                     layersVersion={layersVersion}
                   />
                 </SidebarGroupContent>

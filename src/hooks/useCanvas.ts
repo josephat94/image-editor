@@ -1841,6 +1841,40 @@ export const useCanvas = () => {
     }
   };
 
+  // Reordenar capas (drag and drop)
+  const reorderLayers = (oldIndex: number, newIndex: number) => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const objects = canvas.getObjects();
+
+    // Convertir índices invertidos a índices reales
+    const actualOldIndex = objects.length - 1 - oldIndex;
+    const actualNewIndex = objects.length - 1 - newIndex;
+
+    // Obtener el objeto a mover
+    const object = objects[actualOldIndex];
+    if (!object) return;
+
+    // Remover el objeto de su posición actual
+    objects.splice(actualOldIndex, 1);
+
+    // Insertar en la nueva posición
+    objects.splice(actualNewIndex, 0, object);
+
+    // Actualizar z-index en Fabric.js moviendo cada objeto a su nuevo índice
+    objects.forEach((obj, index) => {
+      canvas.moveTo(obj, index);
+    });
+
+    canvas.renderAll();
+    setLayersVersion((v) => v + 1);
+
+    // Guardar en historial
+    lastActionRef.current = "layer";
+    saveCanvasState("layer", "Reordenaste capas");
+  };
+
   // Función para limpiar todo el historial
   const clearHistory = () => {
     if (!fabricCanvasRef.current) return;
@@ -1991,6 +2025,7 @@ export const useCanvas = () => {
     getLayersList,
     selectLayer,
     deleteLayer,
+    reorderLayers,
     layersVersion,
     // Funciones de historial
     getHistoryList,
