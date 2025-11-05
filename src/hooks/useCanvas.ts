@@ -15,10 +15,39 @@ export const useCanvas = () => {
   const [isCircleMode, setIsCircleMode] = useState(false);
   const [annotationCounter, setAnnotationCounter] = useState(1);
   const [layersVersion, setLayersVersion] = useState(0); // Para forzar re-render de la lista de capas
+  const [historyVersion, setHistoryVersion] = useState(0); // Para forzar re-render del historial
 
-  // Estado para Undo/Redo
-  const historyRef = useRef<string[]>([]);
+  // Interfaz para el historial con metadata
+  interface HistoryState {
+    canvasState: string;
+    action: string;
+    actionType:
+      | "image"
+      | "text"
+      | "arrow"
+      | "rectangle"
+      | "circle"
+      | "blur"
+      | "annotation"
+      | "delete"
+      | "modify"
+      | "layer"
+      | "background"
+      | "duplicate"
+      | "clear"
+      | "initial";
+    timestamp: number;
+    thumbnail?: string; // Thumbnail opcional (solo para acciones importantes)
+  }
+
+  // Estado para Undo/Redo con metadata
+  const historyRef = useRef<HistoryState[]>([]);
   const historyStepRef = useRef<number>(0);
+  const lastActionRef = useRef<string>("initial"); // Para rastrear la última acción
+  const modifyTimeoutRef = useRef<number | null>(null); // Para debounce de modificaciones
+  const addTimeoutRef = useRef<number | null>(null); // Para debounce de creación
+  const isModifyingRef = useRef<boolean>(false); // Flag para saber si está modificando
+  const isDrawingModeRef = useRef<boolean>(false); // Flag para ignorar elementos temporales en object:removed
 
   // Referencias para el modo de dibujo de flechas
   const arrowDrawingRef = useRef<{
@@ -91,16 +120,57 @@ export const useCanvas = () => {
 
     // Listeners para detectar cambios en el canvas
     canvas.on("object:added", () => {
-      saveCanvasState();
-      setLayersVersion((v) => v + 1);
+      // Solo guardar si no estamos en medio de una modificación
+      if (!isModifyingRef.current) {
+        // Cancelar timeout anterior si existe
+        if (addTimeoutRef.current) {
+          clearTimeout(addTimeoutRef.current);
+        }
+
+        // Debounce de 300ms para agrupar creaciones rápidas (como elementos temporales)
+        addTimeoutRef.current = window.setTimeout(() => {
+          // El tipo de acción se determina por la última acción realizada
+          saveCanvasState(lastActionRef.current as HistoryState["actionType"]);
+          setLayersVersion((v) => v + 1);
+          addTimeoutRef.current = null;
+        }, 300);
+      }
     });
+
+    // Detectar cuando EMPIEZA a modificar (mover, escalar, rotar)
+    canvas.on("object:moving", () => {
+      isModifyingRef.current = true;
+    });
+    canvas.on("object:scaling", () => {
+      isModifyingRef.current = true;
+    });
+    canvas.on("object:rotating", () => {
+      isModifyingRef.current = true;
+    });
+
+    // Detectar cuando TERMINA de modificar (suelta el mouse)
     canvas.on("object:modified", () => {
-      saveCanvasState();
-      setLayersVersion((v) => v + 1);
+      // Cancelar timeout anterior si existe
+      if (modifyTimeoutRef.current) {
+        clearTimeout(modifyTimeoutRef.current);
+      }
+
+      // Esperar un poco para asegurarnos de que terminó la modificación
+      modifyTimeoutRef.current = window.setTimeout(() => {
+        isModifyingRef.current = false;
+        saveCanvasState("modify");
+        setLayersVersion((v) => v + 1);
+        modifyTimeoutRef.current = null;
+      }, 300); // 300ms de debounce
     });
+
     canvas.on("object:removed", () => {
-      saveCanvasState();
-      setLayersVersion((v) => v + 1);
+      // Guardar inmediatamente cuando se elimina (no debounce)
+      // Pero NO guardar si estamos en modo dibujo (eliminando elementos temporales)
+      if (!isModifyingRef.current && !isDrawingModeRef.current) {
+        saveCanvasState("delete");
+        setLayersVersion((v) => v + 1);
+      }
     });
 
     // Agregar efecto de transparencia al mover objetos
@@ -173,6 +243,12 @@ export const useCanvas = () => {
     // Cleanup
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
+      if (modifyTimeoutRef.current) {
+        clearTimeout(modifyTimeoutRef.current);
+      }
+      if (addTimeoutRef.current) {
+        clearTimeout(addTimeoutRef.current);
+      }
       canvas.dispose();
     };
   }, []);
@@ -250,7 +326,11 @@ export const useCanvas = () => {
         canvas.add(finalArrow);
         finalArrow.bringToFront();
         canvas.renderAll();
+        // El debounce en object:added se encargará de guardar
       }
+
+      // Desactivar flag de modo dibujo DESPUÉS de crear el elemento final
+      isDrawingModeRef.current = false;
 
       // Resetear el estado de dibujo
       arrowDrawingRef.current.isDrawing = false;
@@ -276,6 +356,7 @@ export const useCanvas = () => {
 
         // Resetear el estado
         arrowDrawingRef.current.isDrawing = false;
+        isDrawingModeRef.current = false; // Desactivar flag
         setIsArrowMode(false);
         canvas.selection = true;
         canvas.forEachObject((obj) => {
@@ -382,7 +463,11 @@ export const useCanvas = () => {
         canvas.add(finalRect);
         finalRect.bringToFront();
         canvas.renderAll();
+        // El debounce en object:added se encargará de guardar
       }
+
+      // Desactivar flag de modo dibujo DESPUÉS de crear el elemento final
+      isDrawingModeRef.current = false;
 
       // Resetear el estado de dibujo
       rectangleDrawingRef.current.isDrawing = false;
@@ -408,6 +493,7 @@ export const useCanvas = () => {
 
         // Resetear el estado
         rectangleDrawingRef.current.isDrawing = false;
+        isDrawingModeRef.current = false; // Desactivar flag
         setIsRectangleMode(false);
         canvas.selection = true;
         canvas.forEachObject((obj) => {
@@ -508,7 +594,11 @@ export const useCanvas = () => {
         canvas.add(finalCircle);
         finalCircle.bringToFront();
         canvas.renderAll();
+        // El debounce en object:added se encargará de guardar
       }
+
+      // Desactivar flag de modo dibujo DESPUÉS de crear el elemento final
+      isDrawingModeRef.current = false;
 
       // Resetear el estado de dibujo
       circleDrawingRef.current.isDrawing = false;
@@ -534,6 +624,7 @@ export const useCanvas = () => {
 
         // Resetear el estado
         circleDrawingRef.current.isDrawing = false;
+        isDrawingModeRef.current = false; // Desactivar flag
         setIsCircleMode(false);
         canvas.selection = true;
         canvas.forEachObject((obj) => {
@@ -672,7 +763,11 @@ export const useCanvas = () => {
         canvas.add(finalBlurGroup);
         finalBlurGroup.bringToFront();
         canvas.renderAll();
+        // El debounce en object:added se encargará de guardar
       }
+
+      // Desactivar flag de modo dibujo DESPUÉS de crear el elemento final
+      isDrawingModeRef.current = false;
 
       // Resetear el estado de dibujo
       blurDrawingRef.current.isDrawing = false;
@@ -698,6 +793,7 @@ export const useCanvas = () => {
 
         // Resetear el estado
         blurDrawingRef.current.isDrawing = false;
+        isDrawingModeRef.current = false; // Desactivar flag
         setIsBlurMode(false);
         canvas.selection = true;
         canvas.forEachObject((obj) => {
@@ -786,6 +882,8 @@ export const useCanvas = () => {
   const addImage = (imageUrl: string) => {
     if (!fabricCanvasRef.current) return;
 
+    lastActionRef.current = "image"; // Trackear tipo de acción
+
     fabric.Image.fromURL(imageUrl, (img) => {
       if (!fabricCanvasRef.current) return;
 
@@ -810,6 +908,7 @@ export const useCanvas = () => {
       // Enviar la imagen al fondo para que las flechas y textos queden encima
       img.sendToBack();
       canvas.renderAll();
+      // El debounce en object:added se encargará de guardar
     });
   };
 
@@ -920,6 +1019,9 @@ export const useCanvas = () => {
   const addArrow = () => {
     if (!fabricCanvasRef.current) return;
 
+    lastActionRef.current = "arrow"; // Trackear tipo de acción
+    isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
+
     // Activar el modo de dibujo de flechas
     setIsArrowMode(true);
     const canvas = fabricCanvasRef.current;
@@ -938,6 +1040,7 @@ export const useCanvas = () => {
   const addText = (text: string) => {
     if (!fabricCanvasRef.current) return;
 
+    lastActionRef.current = "text"; // Trackear tipo de acción
     const canvas = fabricCanvasRef.current;
 
     const textObj = new fabric.Text(text, {
@@ -975,10 +1078,14 @@ export const useCanvas = () => {
       easing: fabric.util.ease.easeOutBack,
       onChange: canvas.renderAll.bind(canvas),
     });
+    // El debounce en object:added se encargará de guardar
   };
 
   const addRectangle = () => {
     if (!fabricCanvasRef.current) return;
+
+    lastActionRef.current = "rectangle"; // Trackear tipo de acción
+    isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
     // Activar el modo de dibujo de rectángulos
     setIsRectangleMode(true);
@@ -998,6 +1105,9 @@ export const useCanvas = () => {
   const addCircle = () => {
     if (!fabricCanvasRef.current) return;
 
+    lastActionRef.current = "circle"; // Trackear tipo de acción
+    isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
+
     // Activar el modo de dibujo de círculos
     setIsCircleMode(true);
     const canvas = fabricCanvasRef.current;
@@ -1015,6 +1125,9 @@ export const useCanvas = () => {
 
   const addBlurBox = () => {
     if (!fabricCanvasRef.current) return;
+
+    lastActionRef.current = "blur"; // Trackear tipo de acción
+    isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
     // Activar el modo de dibujo de blur
     setIsBlurMode(true);
@@ -1034,6 +1147,7 @@ export const useCanvas = () => {
   const addNumberedAnnotation = () => {
     if (!fabricCanvasRef.current) return;
 
+    lastActionRef.current = "annotation"; // Trackear tipo de acción
     const canvas = fabricCanvasRef.current;
 
     const radius = 30;
@@ -1097,6 +1211,7 @@ export const useCanvas = () => {
       easing: fabric.util.ease.easeOutBack,
       onChange: canvas.renderAll.bind(canvas),
     });
+    // El debounce en object:added se encargará de guardar
 
     // Incrementar el contador para la siguiente anotación
     setAnnotationCounter(annotationCounter + 1);
@@ -1109,6 +1224,7 @@ export const useCanvas = () => {
   const duplicateSelected = () => {
     if (!fabricCanvasRef.current) return;
 
+    lastActionRef.current = "duplicate"; // Trackear tipo de acción
     const canvas = fabricCanvasRef.current;
     const activeObject = canvas.getActiveObject();
 
@@ -1166,6 +1282,7 @@ export const useCanvas = () => {
       // Seleccionar el nuevo objeto
       canvas.setActiveObject(group);
       canvas.requestRenderAll();
+      // El debounce en object:added se encargará de guardar
 
       // Incrementar el contador
       setAnnotationCounter(annotationCounter + 1);
@@ -1200,14 +1317,17 @@ export const useCanvas = () => {
       // Seleccionar el objeto clonado
       canvas.setActiveObject(cloned);
       canvas.requestRenderAll();
+      // El debounce en object:added se encargará de guardar
     });
   };
 
   const clearCanvas = () => {
     if (!fabricCanvasRef.current) return;
+    lastActionRef.current = "clear"; // Trackear tipo de acción
     fabricCanvasRef.current.clear();
     fabricCanvasRef.current.backgroundColor = "#ffffff";
     fabricCanvasRef.current.renderAll();
+    saveCanvasState("clear");
   };
 
   const downloadImage = () => {
@@ -1336,10 +1456,14 @@ export const useCanvas = () => {
     }
   };
 
-  const saveCanvasState = () => {
+  const saveCanvasState = (
+    actionType: HistoryState["actionType"] = "modify",
+    actionDescription?: string
+  ) => {
     if (!fabricCanvasRef.current) return;
 
-    const json = JSON.stringify(fabricCanvasRef.current.toJSON());
+    const canvas = fabricCanvasRef.current;
+    const json = JSON.stringify(canvas.toJSON());
     const history = historyRef.current;
     const currentStep = historyStepRef.current;
 
@@ -1348,15 +1472,100 @@ export const useCanvas = () => {
       historyRef.current = history.slice(0, currentStep + 1);
     }
 
-    // Agregar nuevo estado
-    historyRef.current.push(json);
+    // Generar descripción automática si no se proporciona
+    let action = actionDescription;
+    if (!action) {
+      switch (actionType) {
+        case "image":
+          action = "Agregaste una imagen";
+          break;
+        case "text":
+          action = "Agregaste texto";
+          break;
+        case "arrow":
+          action = "Agregaste una flecha";
+          break;
+        case "rectangle":
+          action = "Agregaste un rectángulo";
+          break;
+        case "circle":
+          action = "Agregaste un círculo";
+          break;
+        case "blur":
+          action = "Aplicaste censura";
+          break;
+        case "annotation":
+          action = "Agregaste una anotación";
+          break;
+        case "delete":
+          action = "Eliminaste un elemento";
+          break;
+        case "modify":
+          action = "Modificaste un elemento";
+          break;
+        case "layer":
+          action = "Cambiaste el orden de capas";
+          break;
+        case "background":
+          action = "Cambiaste el fondo";
+          break;
+        case "duplicate":
+          action = "Duplicaste un elemento";
+          break;
+        case "clear":
+          action = "Limpiaste el canvas";
+          break;
+        case "initial":
+          action = "Estado inicial";
+          break;
+        default:
+          action = "Hiciste un cambio";
+      }
+    }
 
-    // Limitar el historial a 20 pasos
-    if (historyRef.current.length > 20) {
+    // Generar thumbnail solo para acciones importantes
+    let thumbnail: string | undefined;
+    const importantActions: HistoryState["actionType"][] = [
+      "image",
+      "clear",
+      "background",
+    ];
+
+    // Generar thumbnail cada 5 acciones o para acciones importantes
+    if (
+      importantActions.includes(actionType) ||
+      historyRef.current.length % 5 === 0
+    ) {
+      try {
+        thumbnail = canvas.toDataURL({
+          format: "png",
+          quality: 0.3, // Baja calidad para thumbnails pequeños
+          multiplier: 0.1, // Thumbnail muy pequeño (10% del tamaño original)
+        });
+      } catch (error) {
+        console.warn("No se pudo generar thumbnail:", error);
+      }
+    }
+
+    // Agregar nuevo estado con metadata
+    const newState: HistoryState = {
+      canvasState: json,
+      action,
+      actionType,
+      timestamp: Date.now(),
+      thumbnail,
+    };
+
+    historyRef.current.push(newState);
+
+    // Limitar el historial a 50 pasos (más que antes para mejor historial)
+    if (historyRef.current.length > 50) {
       historyRef.current.shift();
     }
 
     historyStepRef.current = historyRef.current.length - 1;
+    lastActionRef.current = actionType;
+    setHistoryVersion((v) => v + 1);
   };
 
   const undo = () => {
@@ -1371,13 +1580,18 @@ export const useCanvas = () => {
     canvas.off("object:modified");
     canvas.off("object:removed");
 
-    canvas.loadFromJSON(previousState, () => {
+    canvas.loadFromJSON(previousState.canvasState, () => {
       canvas.renderAll();
 
       // Reactivar los listeners
-      canvas.on("object:added", () => saveCanvasState());
-      canvas.on("object:modified", () => saveCanvasState());
-      canvas.on("object:removed", () => saveCanvasState());
+      canvas.on("object:added", () =>
+        saveCanvasState(lastActionRef.current as HistoryState["actionType"])
+      );
+      canvas.on("object:modified", () => saveCanvasState("modify"));
+      canvas.on("object:removed", () => saveCanvasState("delete"));
+
+      setHistoryVersion((v) => v + 1);
+      setLayersVersion((v) => v + 1);
     });
   };
 
@@ -1397,14 +1611,66 @@ export const useCanvas = () => {
     canvas.off("object:modified");
     canvas.off("object:removed");
 
-    canvas.loadFromJSON(nextState, () => {
+    canvas.loadFromJSON(nextState.canvasState, () => {
       canvas.renderAll();
 
       // Reactivar los listeners
-      canvas.on("object:added", () => saveCanvasState());
-      canvas.on("object:modified", () => saveCanvasState());
-      canvas.on("object:removed", () => saveCanvasState());
+      canvas.on("object:added", () =>
+        saveCanvasState(lastActionRef.current as HistoryState["actionType"])
+      );
+      canvas.on("object:modified", () => saveCanvasState("modify"));
+      canvas.on("object:removed", () => saveCanvasState("delete"));
+
+      setHistoryVersion((v) => v + 1);
+      setLayersVersion((v) => v + 1);
     });
+  };
+
+  // Navegar a un punto específico del historial
+  const goToHistoryState = (index: number) => {
+    if (
+      !fabricCanvasRef.current ||
+      index < 0 ||
+      index >= historyRef.current.length
+    )
+      return;
+
+    historyStepRef.current = index;
+    const canvas = fabricCanvasRef.current;
+    const targetState = historyRef.current[index];
+
+    // Temporalmente desactivar los listeners
+    canvas.off("object:added");
+    canvas.off("object:modified");
+    canvas.off("object:removed");
+
+    canvas.loadFromJSON(targetState.canvasState, () => {
+      canvas.renderAll();
+
+      // Reactivar los listeners
+      canvas.on("object:added", () =>
+        saveCanvasState(lastActionRef.current as HistoryState["actionType"])
+      );
+      canvas.on("object:modified", () => saveCanvasState("modify"));
+      canvas.on("object:removed", () => saveCanvasState("delete"));
+
+      setHistoryVersion((v) => v + 1);
+      setLayersVersion((v) => v + 1);
+    });
+  };
+
+  // Obtener la lista del historial
+  const getHistoryList = () => {
+    return historyRef.current.map((state, index) => ({
+      index,
+      action: state.action,
+      actionType: state.actionType,
+      timestamp: state.timestamp,
+      thumbnail: state.thumbnail,
+      isCurrent: index === historyStepRef.current,
+      isPast: index < historyStepRef.current,
+      isFuture: index > historyStepRef.current,
+    }));
   };
 
   const toggleTextMode = () => {
@@ -1415,8 +1681,13 @@ export const useCanvas = () => {
   const setBackgroundColor = (color: string) => {
     if (!fabricCanvasRef.current) return;
 
+    lastActionRef.current = "background"; // Trackear tipo de acción
     fabricCanvasRef.current.backgroundColor = color;
     fabricCanvasRef.current.renderAll();
+    saveCanvasState(
+      "background",
+      `Cambiaste el fondo a ${color === "#ffffff" ? "blanco" : "negro"}`
+    );
   };
 
   // Funciones de control de capas (z-index)
@@ -1427,12 +1698,14 @@ export const useCanvas = () => {
 
     if (!activeObject) return;
 
+    lastActionRef.current = "layer"; // Trackear tipo de acción
     canvas.bringToFront(activeObject);
     activeObject.setCoords(); // Actualizar coordenadas del objeto
     canvas.discardActiveObject(); // Deseleccionar temporalmente
     canvas.setActiveObject(activeObject); // Re-seleccionar para actualizar controles
     canvas.requestRenderAll(); // Forzar re-render completo
     setLayersVersion((v) => v + 1);
+    saveCanvasState("layer", "Trajiste un elemento al frente");
   };
 
   const sendToBack = () => {
@@ -1442,12 +1715,14 @@ export const useCanvas = () => {
 
     if (!activeObject) return;
 
+    lastActionRef.current = "layer"; // Trackear tipo de acción
     canvas.sendToBack(activeObject);
     activeObject.setCoords(); // Actualizar coordenadas del objeto
     canvas.discardActiveObject(); // Deseleccionar temporalmente
     canvas.setActiveObject(activeObject); // Re-seleccionar para actualizar controles
     canvas.requestRenderAll(); // Forzar re-render completo
     setLayersVersion((v) => v + 1);
+    saveCanvasState("layer", "Enviaste un elemento al fondo");
   };
 
   const bringForward = () => {
@@ -1457,12 +1732,14 @@ export const useCanvas = () => {
 
     if (!activeObject) return;
 
+    lastActionRef.current = "layer"; // Trackear tipo de acción
     canvas.bringForward(activeObject);
     activeObject.setCoords(); // Actualizar coordenadas del objeto
     canvas.discardActiveObject(); // Deseleccionar temporalmente
     canvas.setActiveObject(activeObject); // Re-seleccionar para actualizar controles
     canvas.requestRenderAll(); // Forzar re-render completo
     setLayersVersion((v) => v + 1);
+    saveCanvasState("layer", "Subiste un elemento una capa");
   };
 
   const sendBackwards = () => {
@@ -1472,12 +1749,14 @@ export const useCanvas = () => {
 
     if (!activeObject) return;
 
+    lastActionRef.current = "layer"; // Trackear tipo de acción
     canvas.sendBackwards(activeObject);
     activeObject.setCoords(); // Actualizar coordenadas del objeto
     canvas.discardActiveObject(); // Deseleccionar temporalmente
     canvas.setActiveObject(activeObject); // Re-seleccionar para actualizar controles
     canvas.requestRenderAll(); // Forzar re-render completo
     setLayersVersion((v) => v + 1);
+    saveCanvasState("layer", "Bajaste un elemento una capa");
   };
 
   // Obtener información de las capas
@@ -1560,6 +1839,30 @@ export const useCanvas = () => {
       canvas.renderAll();
       setLayersVersion((v) => v + 1);
     }
+  };
+
+  // Función para limpiar todo el historial
+  const clearHistory = () => {
+    if (!fabricCanvasRef.current) return;
+
+    // Guardar el estado actual del canvas
+    const currentState = fabricCanvasRef.current.toJSON();
+
+    // Reiniciar el historial con solo el estado actual
+    historyRef.current = [
+      {
+        canvasState: JSON.stringify(currentState),
+        action: "Estado inicial",
+        actionType: "initial",
+        timestamp: Date.now(),
+      },
+    ];
+
+    historyStepRef.current = 0;
+    lastActionRef.current = "initial";
+
+    // Actualizar la UI
+    setHistoryVersion((v) => v + 1);
   };
 
   const removeImageBackground = async () => {
@@ -1689,5 +1992,10 @@ export const useCanvas = () => {
     selectLayer,
     deleteLayer,
     layersVersion,
+    // Funciones de historial
+    getHistoryList,
+    goToHistoryState,
+    clearHistory,
+    historyVersion,
   };
 };

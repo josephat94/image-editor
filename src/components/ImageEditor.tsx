@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useCanvas } from "@/hooks/useCanvas";
 import { useTour } from "@/hooks/useTour";
 import { LayersPanel } from "@/components/LayersPanel";
+import { HistoryPanel } from "@/components/HistoryPanel";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -106,6 +107,10 @@ const ImageEditor: React.FC = () => {
     selectLayer,
     deleteLayer,
     layersVersion,
+    getHistoryList,
+    goToHistoryState,
+    clearHistory,
+    historyVersion,
   } = useCanvas();
   const { startTour, hasCompletedTour } = useTour();
   const [textInput, setTextInput] = useState("");
@@ -117,6 +122,7 @@ const ImageEditor: React.FC = () => {
     "#ffffff" | "#000000"
   >("#ffffff");
   const [layers, setLayers] = useState(getLayersList());
+  const [history, setHistory] = useState(getHistoryList());
 
   // Definir los pasos del tour
   const tourSteps: DriveStep[] = [
@@ -187,6 +193,16 @@ const ImageEditor: React.FC = () => {
         description:
           "Gestiona el orden de tus elementos. Usa <strong>[</strong> y <strong>]</strong> para mover capas, o <strong>Ctrl+[</strong> y <strong>Ctrl+]</strong> para enviar al fondo/traer al frente.",
         side: "right",
+        align: "center",
+      },
+    },
+    {
+      element: "#history-panel",
+      popover: {
+        title: "Historial de Cambios ⏱️",
+        description:
+          "Viaja en el tiempo! Haz clic en cualquier punto del historial para volver a ese momento. Puedes ver hasta 50 acciones pasadas. Ahora con miniaturas más grandes en el panel derecho.",
+        side: "left",
         align: "center",
       },
     },
@@ -387,6 +403,11 @@ const ImageEditor: React.FC = () => {
     setLayers(getLayersList());
   }, [layersVersion]);
 
+  // Actualizar el historial cuando cambia historyVersion
+  useEffect(() => {
+    setHistory(getHistoryList());
+  }, [historyVersion]);
+
   // Atajos de teclado para control de capas
   useEffect(() => {
     const handleLayerShortcuts = (e: KeyboardEvent) => {
@@ -578,7 +599,7 @@ const ImageEditor: React.FC = () => {
               {/* Header con título y trigger */}
               <header
                 id="editor-header"
-                className="flex h-16 shrink-0 items-center gap-4 border-b border-gray-700 px-6 bg-gray-800"
+                className="flex h-16 shrink-0 items-center gap-4 border-b border-gray-700 px-6 bg-gray-800 pr-[22rem]"
               >
                 <SidebarTrigger className="text-white" />
                 <Separator orientation="vertical" className="h-6 bg-gray-600" />
@@ -600,7 +621,7 @@ const ImageEditor: React.FC = () => {
               </header>
 
               {/* Contenido principal */}
-              <div className="flex-1 p-6 bg-gray-900 overflow-auto">
+              <div className="flex-1 p-6 bg-gray-900 overflow-auto pr-[22rem]">
                 <div className="max-w-7xl mx-auto">
                   <div className="mb-6">
                     <p className="text-white text-center mb-2">
@@ -939,11 +960,11 @@ const ImageEditor: React.FC = () => {
 
                   <div className="flex justify-center items-end gap-6">
                     {/* Marca de agua - Favicon */}
-                    <div className="mb-4 opacity-50 transition-opacity duration-300 absolute bottom-0 right-[16px] z-20">
+                    <div className="mb-4 opacity-50 transition-opacity duration-300 absolute bottom-0 left-[16px] z-20">
                       <img
                         src="/favicon.png"
                         alt="Watermark"
-                        className="w-full"
+                        className="w-[300px]"
                       />
                     </div>
 
@@ -963,6 +984,54 @@ const ImageEditor: React.FC = () => {
                       <p className="mt-2 text-gray-300">Cargando editor...</p>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+            {/* Panel derecho flotante - Historial (estilo shadcn) */}
+            <div className="fixed right-0 top-0 bottom-0 w-80 bg-gray-900 border-l-2 border-gray-700 shadow-2xl z-30 flex flex-col">
+              <div className="border-b border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900">
+                <div className="flex items-center justify-between gap-3 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/20 rounded-lg border border-blue-500/30 shadow-lg shadow-blue-500/10">
+                      <RotateCcw className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-white">
+                        Historial
+                      </h2>
+                      <p className="text-xs text-gray-400">
+                        {history.length}{" "}
+                        {history.length === 1 ? "cambio" : "cambios"}
+                      </p>
+                    </div>
+                  </div>
+                  <TooltipButton content="Limpiar historial">
+                    <Button
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            "¿Estás seguro de que quieres limpiar todo el historial? Esta acción no se puede deshacer."
+                          )
+                        ) {
+                          clearHistory();
+                        }
+                      }}
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TooltipButton>
+                </div>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <div id="history-panel" className="h-full">
+                  <HistoryPanel
+                    history={history}
+                    onGoToState={goToHistoryState}
+                    historyVersion={historyVersion}
+                  />
                 </div>
               </div>
             </div>
