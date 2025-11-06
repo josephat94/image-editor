@@ -3,9 +3,15 @@ import { driver } from "driver.js";
 import type { DriveStep, Config } from "driver.js";
 import "driver.js/dist/driver.css";
 
-const TOUR_COMPLETED_KEY = "image-editor-tour-completed";
+const TOUR_COMPLETED_KEY = "quicksnap-tour-completed";
 
-export const useTour = () => {
+export const useTour = (
+  onStepHighlight?: (
+    element: HTMLElement | null,
+    step: DriveStep,
+    index: number
+  ) => void
+) => {
   const driverRef = useRef<ReturnType<typeof driver> | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
 
@@ -22,6 +28,16 @@ export const useTour = () => {
       smoothScroll: true,
       stagePadding: 10,
       popoverClass: "driver-popover-custom",
+      onHighlightStarted: (_element, step) => {
+        // Llamar al callback si está definido
+        if (onStepHighlight && step.element) {
+          const domElement =
+            typeof step.element === "string"
+              ? (document.querySelector(step.element) as HTMLElement)
+              : (step.element as HTMLElement);
+          onStepHighlight(domElement, step, 0);
+        }
+      },
       onDestroyed: () => {
         setIsTourActive(false);
         // Marcar el tour como completado
@@ -36,7 +52,7 @@ export const useTour = () => {
         driverRef.current.destroy();
       }
     };
-  }, []);
+  }, [onStepHighlight]);
 
   const startTour = (steps: DriveStep[]) => {
     if (driverRef.current) {

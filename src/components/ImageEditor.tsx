@@ -11,7 +11,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  SidebarProvider,
   Sidebar,
   SidebarContent,
   SidebarGroup,
@@ -20,6 +19,7 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -43,8 +43,12 @@ import {
   HelpCircle,
   ChevronsUp,
   ChevronsDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import type { DriveStep } from "driver.js";
+import { useIsLaptop } from "@/hooks/use-is-laptop";
+import { cn } from "@/lib/utils";
 
 // Component Helper for Tooltip
 const TooltipButton = ({
@@ -113,7 +117,40 @@ const ImageEditor: React.FC = () => {
     clearHistory,
     historyVersion,
   } = useCanvas();
-  const { startTour, hasCompletedTour } = useTour();
+
+  // Estado para controlar el panel de historial
+  const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
+  const { open } = useSidebar();
+  const isLaptop = useIsLaptop();
+  // Callback para manejar el tour cuando se destaca un elemento
+  const handleTourStepHighlight = (
+    element: HTMLElement | null,
+    step: DriveStep,
+    _index: number
+  ) => {
+    // Si el paso es el panel de historial, abrir el panel inmediatamente
+    if (step.element === "#history-panel" || element?.id === "history-panel") {
+      // Abrir el panel de forma síncrona para que esté disponible cuando driver.js lo busque
+      setIsHistoryPanelOpen(true);
+      // Usar requestAnimationFrame para asegurar que el DOM se actualice
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Esperar un momento para que la animación se complete antes de hacer scroll
+          setTimeout(() => {
+            const historyPanel = document.querySelector("#history-panel");
+            if (historyPanel) {
+              historyPanel.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
+          }, 350);
+        });
+      });
+    }
+  };
+
+  const { startTour, hasCompletedTour } = useTour(handleTourStepHighlight);
   const [textInput, setTextInput] = useState("");
   const [showTextInput, setShowTextInput] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -124,13 +161,14 @@ const ImageEditor: React.FC = () => {
   >("#ffffff");
   const [layers, setLayers] = useState(getLayersList());
   const [history, setHistory] = useState(getHistoryList());
+  const isCanvasEmpty = layers.length === 0;
 
   // Definir los pasos del tour
   const tourSteps: DriveStep[] = [
     {
       element: "#editor-header",
       popover: {
-        title: "¡Bienvenido al Editor de Imágenes! 🎨",
+        title: "¡Bienvenido a QuickSnap! 🎨",
         description:
           "Esta es una herramienta profesional para editar y anotar imágenes. Te guiaré por las funciones principales en unos segundos.",
         side: "bottom",
@@ -202,7 +240,7 @@ const ImageEditor: React.FC = () => {
       popover: {
         title: "Historial de Cambios ⏱️",
         description:
-          "Viaja en el tiempo! Haz clic en cualquier punto del historial para volver a ese momento. Puedes ver hasta 50 acciones pasadas. Ahora con miniaturas más grandes en el panel derecho.",
+          "Viaja en el tiempo! Haz clic en cualquier punto del historial para volver a ese momento. Puedes ver hasta 50 acciones pasadas. El panel puede abrirse y cerrarse según lo necesites.",
         side: "left",
         align: "center",
       },
@@ -455,542 +493,552 @@ const ImageEditor: React.FC = () => {
 
   return (
     <TooltipProvider>
-      <SidebarProvider defaultOpen={true}>
-        <div className="min-h-screen flex w-full bg-gray-900">
-          {/* Sidebar con configuraciones */}
-          <Sidebar className="border-r border-gray-700 bg-gray-900">
-            <SidebarHeader className="border-b border-gray-700 p-4 bg-gray-900">
-              <h2 className="text-lg font-semibold text-white">
-                Configuración
-              </h2>
-            </SidebarHeader>
-            <SidebarContent className="bg-gray-900">
-              {/* Selector de Color Global */}
-              <SidebarGroup id="color-selector">
-                <SidebarGroupLabel className="text-gray-200 font-semibold">
-                  Color de elementos
-                </SidebarGroupLabel>
-                <SidebarGroupContent className="px-4 py-3">
-                  <div className="grid grid-cols-3 gap-3">
-                    {AVAILABLE_COLORS.map(({ color, title }) => (
-                      <button
-                        key={color}
-                        onClick={() => setCurrentColor(color)}
-                        className={`w-full h-12 rounded-lg border-2 transition-all ${
-                          currentColor === color
-                            ? "border-white ring-2 ring-white/50 scale-105"
-                            : "border-gray-600 hover:border-gray-500"
-                        }`}
-                        style={{ backgroundColor: color }}
-                        title={title}
-                      />
-                    ))}
-                  </div>
-                </SidebarGroupContent>
-              </SidebarGroup>
+      <div className="min-h-screen flex w-full bg-gray-900">
+        {/* Sidebar con configuraciones */}
+        <Sidebar className="border-r border-gray-700 bg-gray-900">
+          <SidebarHeader className="border-b border-gray-700 p-4 bg-gray-900">
+            <h2 className="text-lg font-semibold text-white">Configuración</h2>
+          </SidebarHeader>
+          <SidebarContent className="bg-gray-900">
+            {/* Selector de Color Global */}
+            <SidebarGroup id="color-selector">
+              <SidebarGroupLabel className="text-gray-200 font-semibold">
+                Color de elementos
+              </SidebarGroupLabel>
+              <SidebarGroupContent className="px-4 py-3">
+                <div className="grid grid-cols-3 gap-3">
+                  {AVAILABLE_COLORS.map(({ color, title }) => (
+                    <button
+                      key={color}
+                      onClick={() => setCurrentColor(color)}
+                      className={`w-full h-12 rounded-lg border-2 transition-all ${
+                        currentColor === color
+                          ? "border-white ring-2 ring-white/50 scale-105"
+                          : "border-gray-600 hover:border-gray-500"
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={title}
+                    />
+                  ))}
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-              <Separator className="bg-gray-700" />
+            <Separator className="bg-gray-700" />
 
-              {/* Contador de Anotaciones */}
-              <SidebarGroup id="annotation-counter">
-                <SidebarGroupLabel className="text-gray-200 font-semibold">
-                  Anotaciones numeradas
-                </SidebarGroupLabel>
-                <SidebarGroupContent className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-gray-800 px-4 py-3 rounded-lg border border-gray-700 flex-1">
-                      <div className="text-xs text-gray-300 mb-1">
-                        Próximo número
-                      </div>
-                      <div className="text-2xl font-bold text-white">
-                        {annotationCounter}
-                      </div>
+            {/* Contador de Anotaciones */}
+            <SidebarGroup id="annotation-counter">
+              <SidebarGroupLabel className="text-gray-200 font-semibold">
+                Anotaciones numeradas
+              </SidebarGroupLabel>
+              <SidebarGroupContent className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gray-800 px-4 py-3 rounded-lg border border-gray-700 flex-1">
+                    <div className="text-xs text-gray-300 mb-1">
+                      Próximo número
                     </div>
-                    <TooltipButton content="Reiniciar contador">
-                      <Button
-                        onClick={resetAnnotationCounter}
-                        variant="outline"
-                        size="icon"
-                        className="h-12 w-12"
-                      >
-                        <RotateCcw className="w-5 h-5" />
-                      </Button>
-                    </TooltipButton>
+                    <div className="text-2xl font-bold text-white">
+                      {annotationCounter}
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-300 mt-2">
-                    Presiona{" "}
-                    <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded text-xs text-gray-200">
-                      N
-                    </kbd>{" "}
-                    para agregar
-                  </p>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
-              <Separator className="bg-gray-700" />
-
-              {/* Panel de Capas */}
-              <SidebarGroup
-                id="layers-panel"
-                className="flex-1 flex flex-col min-h-0"
-              >
-                <SidebarGroupLabel className="text-gray-200 font-semibold">
-                  Capas ({layers.length})
-                </SidebarGroupLabel>
-                <SidebarGroupContent className="flex-1 overflow-hidden px-0">
-                  <LayersPanel
-                    layers={layers}
-                    onSelectLayer={selectLayer}
-                    onDeleteLayer={deleteLayer}
-                    onBringToFront={bringToFront}
-                    onSendToBack={sendToBack}
-                    onBringForward={bringForward}
-                    onSendBackwards={sendBackwards}
-                    onReorderLayers={reorderLayers}
-                    layersVersion={layersVersion}
-                  />
-                </SidebarGroupContent>
-              </SidebarGroup>
-
-              <Separator className="bg-gray-700" />
-
-              {/* Selector de Fondo del Canvas */}
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-gray-200 font-semibold">
-                  Fondo del canvas
-                </SidebarGroupLabel>
-                <SidebarGroupContent className="px-4 py-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() => handleBackgroundChange("#ffffff")}
-                      className={`h-12 rounded-lg border-2 transition-all ${
-                        canvasBackground === "#ffffff"
-                          ? "border-white ring-2 ring-white/50 scale-105"
-                          : "border-gray-600 hover:border-gray-500"
-                      }`}
-                      style={{ backgroundColor: "#ffffff" }}
-                      title="Fondo Blanco"
-                    >
-                      <span className="text-xs text-gray-800 font-semibold">
-                        Blanco
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => handleBackgroundChange("#000000")}
-                      className={`h-12 rounded-lg border-2 transition-all ${
-                        canvasBackground === "#000000"
-                          ? "border-white ring-2 ring-white/50 scale-105"
-                          : "border-gray-600 hover:border-gray-500"
-                      }`}
-                      style={{ backgroundColor: "#000000" }}
-                      title="Fondo Negro"
-                    >
-                      <span className="text-xs text-gray-200 font-semibold">
-                        Negro
-                      </span>
-                    </button>
-                  </div>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </SidebarContent>
-          </Sidebar>
-
-          {/* Área principal con canvas */}
-          <SidebarInset className="flex-1">
-            <div className="flex flex-col h-screen relative">
-              {/* Header con título y trigger */}
-              <header
-                id="editor-header"
-                className="flex h-16 shrink-0 items-center gap-4 border-b border-gray-700 px-6 bg-gray-800 pr-[22rem]"
-              >
-                <SidebarTrigger className="text-white" />
-                <Separator orientation="vertical" className="h-6 bg-gray-600" />
-                <h1 className="text-xl font-bold text-white">
-                  Editor de Imágenes
-                </h1>
-                <div className="ml-auto">
-                  <TooltipButton content="Ver tour de bienvenida">
+                  <TooltipButton content="Reiniciar contador">
                     <Button
-                      onClick={handleRestartTour}
-                      variant="ghost"
+                      onClick={resetAnnotationCounter}
+                      variant="outline"
                       size="icon"
-                      className="text-gray-300 hover:text-white"
+                      className="h-12 w-12"
                     >
-                      <HelpCircle className="w-5 h-5" />
+                      <RotateCcw className="w-5 h-5" />
                     </Button>
                   </TooltipButton>
                 </div>
-              </header>
+                <p className="text-xs text-gray-300 mt-2">
+                  Presiona{" "}
+                  <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded text-xs text-gray-200">
+                    N
+                  </kbd>{" "}
+                  para agregar
+                </p>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-              {/* Contenido principal */}
-              <div className="flex-1 p-6 bg-gray-900 overflow-auto pr-[22rem]">
-                <div className="max-w-7xl mx-auto">
-                  <div className="mb-6">
-                    <p className="text-white text-center mb-2">
-                      Pega una imagen con{" "}
-                      <kbd className="px-2 py-1 bg-gray-700 rounded text-sm">
-                        Cmd+V
-                      </kbd>{" "}
-                      o sube un archivo
-                    </p>
-                    <p className="text-white text-center text-sm mb-4">
-                      Presiona{" "}
-                      <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">
-                        Delete
-                      </kbd>{" "}
-                      o{" "}
-                      <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">
-                        ⌫
-                      </kbd>{" "}
-                      para eliminar elementos seleccionados
-                    </p>
+            <Separator className="bg-gray-700" />
 
-                    {/* Mensaje de error para remover fondo */}
-                    {bgRemovalError && (
-                      <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
-                        ⚠️ {bgRemovalError}
+            {/* Panel de Capas */}
+            <SidebarGroup
+              id="layers-panel"
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <SidebarGroupLabel className="text-gray-200 font-semibold">
+                Capas ({layers.length})
+              </SidebarGroupLabel>
+              <SidebarGroupContent className="flex-1 overflow-hidden px-0">
+                <LayersPanel
+                  layers={layers}
+                  onSelectLayer={selectLayer}
+                  onDeleteLayer={deleteLayer}
+                  onBringToFront={bringToFront}
+                  onSendToBack={sendToBack}
+                  onBringForward={bringForward}
+                  onSendBackwards={sendBackwards}
+                  onReorderLayers={reorderLayers}
+                  layersVersion={layersVersion}
+                />
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <Separator className="bg-gray-700" />
+
+            {/* Selector de Fondo del Canvas */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-gray-200 font-semibold">
+                Fondo del canvas
+              </SidebarGroupLabel>
+              <SidebarGroupContent className="px-4 py-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleBackgroundChange("#ffffff")}
+                    className={`h-12 rounded-lg border-2 transition-all ${
+                      canvasBackground === "#ffffff"
+                        ? "border-white ring-2 ring-white/50 scale-105"
+                        : "border-gray-600 hover:border-gray-500"
+                    }`}
+                    style={{ backgroundColor: "#ffffff" }}
+                    title="Fondo Blanco"
+                  >
+                    <span className="text-xs text-gray-800 font-semibold">
+                      Blanco
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleBackgroundChange("#000000")}
+                    className={`h-12 rounded-lg border-2 transition-all ${
+                      canvasBackground === "#000000"
+                        ? "border-white ring-2 ring-white/50 scale-105"
+                        : "border-gray-600 hover:border-gray-500"
+                    }`}
+                    style={{ backgroundColor: "#000000" }}
+                    title="Fondo Negro"
+                  >
+                    <span className="text-xs text-gray-200 font-semibold">
+                      Negro
+                    </span>
+                  </button>
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
+
+        {/* Área principal con canvas */}
+        <SidebarInset className="flex-1">
+          <div
+            className={cn(
+              "flex flex-col h-screen relative",
+              open ? "w-calc(100%-250px)" : "w-full"
+            )}
+          >
+            {/* Header con título y trigger */}
+            <header
+              id="editor-header"
+              className={`flex h-16 shrink-0 items-center gap-4 border-b border-gray-700 px-6 bg-gray-800 transition-all duration-300 ${
+                isHistoryPanelOpen ? "pr-[22rem]" : "pr-4"
+              }`}
+            >
+              <SidebarTrigger className="text-white" />
+              <Separator orientation="vertical" className="h-6 bg-gray-600" />
+              <h1 className="text-xl font-bold text-white">QuickSnap</h1>
+              <div className="ml-auto">
+                <TooltipButton content="Ver tour de bienvenida">
+                  <Button
+                    onClick={handleRestartTour}
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-300 hover:text-white"
+                  >
+                    <HelpCircle className="w-5 h-5" />
+                  </Button>
+                </TooltipButton>
+              </div>
+            </header>
+
+            {/* Contenido principal */}
+            <div
+              className={`flex-1 p-6 bg-gray-900 overflow-y-auto overflow-x-hidden transition-all duration-300 ${
+                isHistoryPanelOpen ? "pr-[22rem]" : "pr-6"
+              }`}
+            >
+              <div className="w-full max-w-full mx-auto">
+                <div className="mb-6">
+                  {/* Mensaje de error para remover fondo */}
+                  {bgRemovalError && (
+                    <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
+                      ⚠️ {bgRemovalError}
+                    </div>
+                  )}
+
+                  {/* Mensaje de procesamiento */}
+                  {isRemovingBg && (
+                    <div className="bg-blue-500/20 border border-blue-500 text-blue-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
+                      <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                      Removiendo fondo con IA... Esto puede tardar unos segundos
+                    </div>
+                  )}
+
+                  {/* Toolbar Profesional */}
+                  <div className="bg-gray-700 rounded-lg p-4 shadow-inner">
+                    <div className="flex flex-wrap gap-3 justify-center items-center">
+                      {/* Sección: Archivo */}
+                      <div
+                        id="file-upload-section"
+                        className="flex gap-2 items-center"
+                      >
+                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+                          Archivo
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          id="file-upload"
+                        />
+                        <label htmlFor="file-upload">
+                          <TooltipButton content="Subir imagen">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="cursor-pointer"
+                            >
+                              <Upload className="w-4 h-4" />
+                            </Button>
+                          </TooltipButton>
+                        </label>
                       </div>
-                    )}
 
-                    {/* Mensaje de procesamiento */}
-                    {isRemovingBg && (
-                      <div className="bg-blue-500/20 border border-blue-500 text-blue-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
-                        <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                        Removiendo fondo con IA... Esto puede tardar unos
-                        segundos
-                      </div>
-                    )}
+                      {/* Divisor */}
+                      <div className="h-8 w-px bg-gray-600" />
 
-                    {/* Toolbar Profesional */}
-                    <div className="bg-gray-700 rounded-lg p-4 shadow-inner">
-                      <div className="flex flex-wrap gap-3 justify-center items-center">
-                        {/* Sección: Archivo */}
-                        <div
-                          id="file-upload-section"
-                          className="flex gap-2 items-center"
-                        >
-                          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-                            Archivo
-                          </div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            id="file-upload"
-                          />
-                          <label htmlFor="file-upload">
-                            <TooltipButton content="Subir imagen">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="cursor-pointer"
-                              >
-                                <Upload className="w-4 h-4" />
-                              </Button>
-                            </TooltipButton>
-                          </label>
+                      {/* Sección: Edición */}
+                      <div className="flex gap-2 items-center">
+                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+                          Edición
                         </div>
+                        <TooltipButton content="Deshacer (Ctrl+Z)">
+                          <Button onClick={undo} variant="outline" size="icon">
+                            <Undo2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
 
-                        {/* Divisor */}
-                        <div className="h-8 w-px bg-gray-600" />
+                        <TooltipButton content="Rehacer (Ctrl+Shift+Z)">
+                          <Button onClick={redo} variant="outline" size="icon">
+                            <Redo2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
 
-                        {/* Sección: Edición */}
-                        <div className="flex gap-2 items-center">
-                          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-                            Edición
-                          </div>
-                          <TooltipButton content="Deshacer (Ctrl+Z)">
-                            <Button
-                              onClick={undo}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <Undo2 className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Rehacer (Ctrl+Shift+Z)">
-                            <Button
-                              onClick={redo}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <Redo2 className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Duplicar elemento (Ctrl+D)">
-                            <Button
-                              onClick={duplicateSelected}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <CopyPlus className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Traer al frente (Ctrl+])">
-                            <Button
-                              onClick={bringToFront}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <ChevronsUp className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Enviar al fondo (Ctrl+[)">
-                            <Button
-                              onClick={sendToBack}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <ChevronsDown className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-                        </div>
-
-                        {/* Divisor */}
-                        <div className="h-8 w-px bg-gray-600" />
-
-                        {/* Sección: Herramientas */}
-                        <div
-                          id="tools-section"
-                          className="flex gap-2 items-center"
-                        >
-                          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-                            Herramientas
-                          </div>
-                          <TooltipButton content="Flecha (A)">
-                            <Button
-                              onClick={addArrow}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <ArrowRight className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Rectángulo (R)">
-                            <Button
-                              onClick={addRectangle}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <Square className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Círculo (C)">
-                            <Button
-                              onClick={addCircle}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <Circle className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Censurar (B)">
-                            <Button
-                              onClick={addBlurBox}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Anotación Numerada (N)">
-                            <Button
-                              onClick={addNumberedAnnotation}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <Hash className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Texto (T)">
-                            <Button
-                              onClick={() => setShowTextInput(!showTextInput)}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <Type className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton content="Remover Fondo IA (F)">
-                            <Button
-                              id="remove-bg-button"
-                              onClick={handleRemoveBackground}
-                              variant="outline"
-                              size="icon"
-                              disabled={isRemovingBg}
-                              className="relative"
-                            >
-                              {isRemovingBg ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Scissors className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </TooltipButton>
-                        </div>
-
-                        {/* Divisor */}
-                        <div className="h-8 w-px bg-gray-600" />
-
-                        {/* Sección: Acciones */}
-                        <div
-                          id="actions-section"
-                          className="flex gap-2 items-center"
-                        >
-                          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-                            Acciones
-                          </div>
-                          <TooltipButton content="Limpiar canvas">
-                            <Button
-                              onClick={clearCanvas}
-                              variant="outline"
-                              size="icon"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
-
-                          <TooltipButton
-                            content={
-                              copied ? "¡Copiado!" : "Copiar al portapapeles"
-                            }
+                        <TooltipButton content="Duplicar elemento (Ctrl+D)">
+                          <Button
+                            onClick={duplicateSelected}
+                            variant="outline"
+                            size="icon"
                           >
-                            <Button
-                              onClick={handleCopyToClipboard}
-                              variant={copied ? "secondary" : "default"}
-                              disabled={copied}
-                              size="icon"
-                            >
-                              {copied ? (
-                                <Check className="w-4 h-4" />
-                              ) : (
-                                <Copy className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </TooltipButton>
+                            <CopyPlus className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
 
-                          <TooltipButton content="Descargar imagen">
-                            <Button
-                              onClick={downloadImage}
-                              variant="default"
-                              size="icon"
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                          </TooltipButton>
+                        <TooltipButton content="Traer al frente (Ctrl+])">
+                          <Button
+                            onClick={bringToFront}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <ChevronsUp className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton content="Enviar al fondo (Ctrl+[)">
+                          <Button
+                            onClick={sendToBack}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <ChevronsDown className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+                      </div>
+
+                      {/* Divisor */}
+                      <div className="h-8 w-px bg-gray-600" />
+
+                      {/* Sección: Herramientas */}
+                      <div
+                        id="tools-section"
+                        className="flex gap-2 items-center"
+                      >
+                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+                          Herramientas
                         </div>
+                        <TooltipButton content="Flecha (A)">
+                          <Button
+                            onClick={addArrow}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton content="Rectángulo (R)">
+                          <Button
+                            onClick={addRectangle}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <Square className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton content="Círculo (C)">
+                          <Button
+                            onClick={addCircle}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <Circle className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton content="Censurar (B)">
+                          <Button
+                            onClick={addBlurBox}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton content="Anotación Numerada (N)">
+                          <Button
+                            onClick={addNumberedAnnotation}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <Hash className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton content="Texto (T)">
+                          <Button
+                            onClick={() => setShowTextInput(!showTextInput)}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <Type className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton content="Remover Fondo IA (F)">
+                          <Button
+                            id="remove-bg-button"
+                            onClick={handleRemoveBackground}
+                            variant="outline"
+                            size="icon"
+                            disabled={isRemovingBg}
+                            className="relative"
+                          >
+                            {isRemovingBg ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Scissors className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </TooltipButton>
+                      </div>
+
+                      {/* Divisor */}
+                      <div className="h-8 w-px bg-gray-600" />
+
+                      {/* Sección: Acciones */}
+                      <div
+                        id="actions-section"
+                        className="flex gap-2 items-center"
+                      >
+                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+                          Acciones
+                        </div>
+                        <TooltipButton content="Limpiar canvas">
+                          <Button
+                            onClick={clearCanvas}
+                            variant="outline"
+                            size="icon"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton
+                          content={
+                            copied ? "¡Copiado!" : "Copiar al portapapeles"
+                          }
+                        >
+                          <Button
+                            onClick={handleCopyToClipboard}
+                            variant={copied ? "secondary" : "default"}
+                            disabled={copied}
+                            size="icon"
+                          >
+                            {copied ? (
+                              <Check className="w-4 h-4" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </TooltipButton>
+
+                        <TooltipButton content="Descargar imagen">
+                          <Button
+                            onClick={downloadImage}
+                            variant="default"
+                            size="icon"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </TooltipButton>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {showTextInput && (
-                    <div className="mb-4 p-4 bg-gray-700 rounded-lg">
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-200 mb-2">
-                          Fuente:
-                        </label>
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() =>
-                              setCurrentFont("Montserrat, sans-serif")
-                            }
-                            variant={
-                              currentFont === "Montserrat, sans-serif"
-                                ? "default"
-                                : "outline"
-                            }
-                            size="sm"
-                            style={{ fontFamily: "Montserrat, sans-serif" }}
-                          >
-                            Montserrat
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              setCurrentFont("Red Hat Display, sans-serif")
-                            }
-                            variant={
-                              currentFont === "Red Hat Display, sans-serif"
-                                ? "default"
-                                : "outline"
-                            }
-                            size="sm"
-                            style={{
-                              fontFamily: "Red Hat Display, sans-serif",
-                            }}
-                          >
-                            Red Hat Display
-                          </Button>
-                        </div>
-                      </div>
+                {showTextInput && (
+                  <div className="mb-4 p-4 bg-gray-700 rounded-lg">
+                    <div className="mb-3">
+                      <label className="block text-sm font-medium text-gray-200 mb-2">
+                        Fuente:
+                      </label>
                       <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={textInput}
-                          onChange={(e) => setTextInput(e.target.value)}
-                          placeholder="Escribe tu texto aquí..."
-                          className="flex-1 px-3 py-2 bg-gray-600 text-white border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                          onKeyPress={(e) =>
-                            e.key === "Enter" && handleAddText()
+                        <Button
+                          onClick={() =>
+                            setCurrentFont("Montserrat, sans-serif")
                           }
-                          style={{ fontFamily: currentFont }}
-                          autoFocus
-                        />
-                        <Button onClick={handleAddText} size="sm">
-                          Agregar
+                          variant={
+                            currentFont === "Montserrat, sans-serif"
+                              ? "default"
+                              : "outline"
+                          }
+                          size="sm"
+                          style={{ fontFamily: "Montserrat, sans-serif" }}
+                        >
+                          Montserrat
                         </Button>
                         <Button
-                          onClick={() => setShowTextInput(false)}
-                          variant="outline"
+                          onClick={() =>
+                            setCurrentFont("Red Hat Display, sans-serif")
+                          }
+                          variant={
+                            currentFont === "Red Hat Display, sans-serif"
+                              ? "default"
+                              : "outline"
+                          }
                           size="sm"
+                          style={{
+                            fontFamily: "Red Hat Display, sans-serif",
+                          }}
                         >
-                          Cancelar
+                          Red Hat Display
                         </Button>
                       </div>
                     </div>
-                  )}
-
-                  <div className="flex justify-center items-end gap-6">
-                    {/* Marca de agua - Favicon */}
-                    <div className="mb-4 opacity-50 transition-opacity duration-300 absolute bottom-0 left-[16px] z-20">
-                      <img
-                        src="/favicon.png"
-                        alt="Watermark"
-                        className="w-[300px]"
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={textInput}
+                        onChange={(e) => setTextInput(e.target.value)}
+                        placeholder="Escribe tu texto aquí..."
+                        className="flex-1 px-3 py-2 bg-gray-600 text-white border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                        onKeyPress={(e) => e.key === "Enter" && handleAddText()}
+                        style={{ fontFamily: currentFont }}
+                        autoFocus
                       />
-                    </div>
-
-                    {/* Canvas */}
-                    <div className="border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl">
-                      <canvas
-                        ref={canvasRef}
-                        className="block"
-                        style={{ maxWidth: "100%", height: "auto" }}
-                      />
+                      <Button onClick={handleAddText} size="sm">
+                        Agregar
+                      </Button>
+                      <Button
+                        onClick={() => setShowTextInput(false)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Cancelar
+                      </Button>
                     </div>
                   </div>
+                )}
 
-                  {!isReady && (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                      <p className="mt-2 text-gray-300">Cargando editor...</p>
-                    </div>
-                  )}
+                <div className="flex justify-center items-center gap-6 w-full">
+                  {/* Marca de agua - Favicon */}
+                  <div className="mb-4 opacity-50 transition-opacity duration-300 absolute bottom-0 left-[16px] z-20">
+                    <img
+                      src="/favicon.png"
+                      alt="Watermark"
+                      className={isLaptop ? "w-[150px]" : "w-[300px]"}
+                    />
+                  </div>
+
+                  {/* Canvas */}
+                  <div
+                    className={`border-2 border-gray-600 rounded-lg overflow-hidden shadow-xl transition-all duration-300 relative inline-block ${
+                      isLaptop ? "max-w-[68%]" : "max-w-[80%]"
+                    }`}
+                    style={{ maxWidth: "100%" }}
+                  >
+                    <canvas
+                      ref={canvasRef}
+                      className="block"
+                      style={{
+                        display: "block",
+                        maxWidth: "100%",
+                        height: "auto",
+                      }}
+                    />
+                    {/* Empty State */}
+                    {isCanvasEmpty && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <div className="text-center p-8">
+                          <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4 opacity-50" />
+                          <p className="text-gray-400 text-lg mb-2 font-medium">
+                            Pega una imagen con{" "}
+                            <kbd className="px-2 py-1 bg-gray-700 rounded text-sm text-gray-300">
+                              Cmd+V
+                            </kbd>{" "}
+                            o sube un archivo
+                          </p>
+                          <p className="text-gray-500 text-sm">
+                            Arrastra una imagen aquí o haz clic en el botón de
+                            subir
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {!isReady && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                    <p className="mt-2 text-gray-300">Cargando editor...</p>
+                  </div>
+                )}
               </div>
             </div>
-            {/* Panel derecho flotante - Historial (estilo shadcn) */}
-            <div className="fixed right-0 top-0 bottom-0 w-80 bg-gray-900 border-l-2 border-gray-700 shadow-2xl z-30 flex flex-col">
+          </div>
+          {/* Panel derecho flotante - Historial (estilo shadcn) */}
+          <div
+            className={`fixed right-0 top-0 bottom-0 bg-gray-900 border-l-2 border-gray-700 shadow-2xl z-30 flex flex-col transition-all duration-300 ${
+              isHistoryPanelOpen ? "w-80" : "w-0"
+            }`}
+          >
+            {/* Mantener el elemento siempre en el DOM para que el tour lo encuentre */}
+            <div className={`${isHistoryPanelOpen ? "block" : "hidden"}`}>
               <div className="border-b border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900">
                 <div className="flex items-center justify-between gap-3 p-4">
                   <div className="flex items-center gap-3">
@@ -1007,24 +1055,36 @@ const ImageEditor: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <TooltipButton content="Limpiar historial">
-                    <Button
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            "¿Estás seguro de que quieres limpiar todo el historial? Esta acción no se puede deshacer."
-                          )
-                        ) {
-                          clearHistory();
-                        }
-                      }}
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TooltipButton>
+                  <div className="flex gap-1">
+                    <TooltipButton content="Cerrar panel">
+                      <Button
+                        onClick={() => setIsHistoryPanelOpen(false)}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-400 hover:text-white hover:bg-gray-700"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </TooltipButton>
+                    <TooltipButton content="Limpiar historial">
+                      <Button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "¿Estás seguro de que quieres limpiar todo el historial? Esta acción no se puede deshacer."
+                            )
+                          ) {
+                            clearHistory();
+                          }
+                        }}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TooltipButton>
+                  </div>
                 </div>
               </div>
               <div className="flex-1 overflow-hidden">
@@ -1037,9 +1097,26 @@ const ImageEditor: React.FC = () => {
                 </div>
               </div>
             </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+          </div>
+
+          {/* Botón flotante para abrir el panel de historial */}
+          {!isHistoryPanelOpen && (
+            <div className="fixed right-0 top-1/2 -translate-y-1/2 z-30">
+              <TooltipButton content="Abrir historial">
+                <Button
+                  onClick={() => setIsHistoryPanelOpen(true)}
+                  className="rounded-l-lg rounded-r-none h-16 w-10 bg-gray-900 hover:bg-gray-800 border-2 border-r-0 border-gray-700 shadow-xl"
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <ChevronLeft className="w-4 h-4 text-blue-400" />
+                    <RotateCcw className="w-4 h-4 text-blue-400" />
+                  </div>
+                </Button>
+              </TooltipButton>
+            </div>
+          )}
+        </SidebarInset>
+      </div>
     </TooltipProvider>
   );
 };

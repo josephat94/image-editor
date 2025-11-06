@@ -1,6 +1,6 @@
-# Editor de Imágenes
+# QuickSnap
 
-Una aplicación web moderna para editar imágenes con captura de pantalla, construida con Vite, React TypeScript, Tailwind CSS y shadcn/ui.
+Una aplicación web moderna para editar imágenes y capturas de pantalla al instante. Pega, anota y descarga en segundos. Construida con Vite, React TypeScript, Tailwind CSS y shadcn/ui.
 
 ## Características
 

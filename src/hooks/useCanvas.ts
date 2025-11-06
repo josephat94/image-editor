@@ -889,8 +889,16 @@ export const useCanvas = () => {
 
       // Escalar la imagen para que quepa en el canvas
       const canvas = fabricCanvasRef.current;
-      const maxWidth = canvas.width! - 20;
-      const maxHeight = canvas.height! - 20;
+
+      // Detectar si estamos en laptop (ancho de ventana entre 768 y 1440)
+      const isLaptop = window.innerWidth >= 768 && window.innerWidth < 1440;
+
+      // Ajustar el tamaño máximo según si es laptop o no
+      // En laptops el canvas visual es ~68% del tamaño original
+      const canvasVisualScale = isLaptop ? 0.68 : 1.0;
+
+      const maxWidth = (canvas.width! - 20) * canvasVisualScale;
+      const maxHeight = (canvas.height! - 20) * canvasVisualScale;
 
       const scaleX = maxWidth / img.width!;
       const scaleY = maxHeight / img.height!;
