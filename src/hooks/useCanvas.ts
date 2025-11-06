@@ -2,8 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { fabric } from "fabric";
 import { removeBackground } from "@imgly/background-removal";
 import type { Config } from "@imgly/background-removal";
+import { Vibrant } from "node-vibrant/browser";
 
-export const useCanvas = () => {
+export const useCanvas = (
+  onPaletteChange: (palette: {
+    vibrant?: string;
+    muted?: string;
+    darkVibrant?: string;
+    darkMuted?: string;
+    lightVibrant?: string;
+    lightMuted?: string;
+  }) => void
+) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -883,6 +893,20 @@ export const useCanvas = () => {
     if (!fabricCanvasRef.current) return;
 
     lastActionRef.current = "image"; // Trackear tipo de acción
+
+    Vibrant.from(imageUrl)
+      .getPalette()
+      .then((palette) => {
+        const hexas = {
+          darkVibrant: palette.DarkVibrant?.hex,
+          vibrant: palette.Vibrant?.hex,
+          lightVibrant: palette.LightVibrant?.hex,
+          muted: palette.Muted?.hex,
+          darkMuted: palette.DarkMuted?.hex,
+          lightMuted: palette.LightMuted?.hex,
+        };
+        onPaletteChange(hexas);
+      });
 
     fabric.Image.fromURL(imageUrl, (img) => {
       if (!fabricCanvasRef.current) return;

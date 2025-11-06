@@ -68,8 +68,8 @@ const TooltipButton = ({
   </Tooltip>
 );
 
-// Colores disponibles para los elementos
-const AVAILABLE_COLORS = [
+// Colores base disponibles para los elementos
+const BASE_COLORS = [
   { color: "#3A86FF", title: "Azul" },
   { color: "#FF006E", title: "Fuchsia" },
   { color: "#8338EC", title: "Morado" },
@@ -79,6 +79,58 @@ const AVAILABLE_COLORS = [
 ];
 
 const ImageEditor: React.FC = () => {
+  // Estado para la paleta de colores extraída de la imagen
+  const [imagePalette, setImagePalette] = useState<{
+    vibrant?: string;
+    muted?: string;
+    darkVibrant?: string;
+    darkMuted?: string;
+    lightVibrant?: string;
+    lightMuted?: string;
+  } | null>(null);
+
+  // Callback para manejar cambios en la paleta de colores
+  const handlePaletteChange = (palette: {
+    vibrant?: string;
+    muted?: string;
+    darkVibrant?: string;
+    darkMuted?: string;
+    lightVibrant?: string;
+    lightMuted?: string;
+  }) => {
+    setImagePalette(palette);
+
+    // Si hay un color vibrant, actualizar el fondo del canvas automáticamente
+    if (palette.vibrant) {
+      setCanvasBackground(palette.vibrant as any);
+      setBackgroundColor(palette.vibrant);
+    }
+  };
+
+  // Combinar colores base con colores de la paleta de la imagen
+  const availableColors = React.useMemo(() => {
+    const colors = [...BASE_COLORS];
+
+    if (imagePalette) {
+      // Agregar colores de la paleta si existen y no están duplicados
+      const paletteColors = [
+        { color: imagePalette.vibrant, title: "Vibrant" },
+        { color: imagePalette.muted, title: "Muted" },
+        { color: imagePalette.darkVibrant, title: "Dark Vibrant" },
+        { color: imagePalette.darkMuted, title: "Dark Muted" },
+        { color: imagePalette.lightVibrant, title: "Light Vibrant" },
+        { color: imagePalette.lightMuted, title: "Light Muted" },
+      ].filter(
+        (c): c is { color: string; title: string } =>
+          !!c.color && !colors.some((base) => base.color === c.color)
+      );
+
+      colors.push(...paletteColors);
+    }
+
+    return colors;
+  }, [imagePalette]);
+
   const {
     canvasRef,
     isReady,
@@ -116,7 +168,7 @@ const ImageEditor: React.FC = () => {
     goToHistoryState,
     clearHistory,
     historyVersion,
-  } = useCanvas();
+  } = useCanvas(handlePaletteChange);
 
   // Estado para controlar el panel de historial
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
@@ -156,9 +208,7 @@ const ImageEditor: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [isRemovingBg, setIsRemovingBg] = useState(false);
   const [bgRemovalError, setBgRemovalError] = useState<string | null>(null);
-  const [canvasBackground, setCanvasBackground] = useState<
-    "#ffffff" | "#000000"
-  >("#ffffff");
+  const [canvasBackground, setCanvasBackground] = useState<string>("#ffffff");
   const [layers, setLayers] = useState(getLayersList());
   const [history, setHistory] = useState(getHistoryList());
   const isCanvasEmpty = layers.length === 0;
@@ -180,7 +230,7 @@ const ImageEditor: React.FC = () => {
       popover: {
         title: "Cargar Imágenes 📁",
         description:
-          "Puedes subir una imagen haciendo clic aquí o simplemente pegándola con <strong>Cmd+V</strong> (o Ctrl+V en Windows).",
+          "Puedes subir una imagen haciendo clic aquí o simplemente pegándola con <strong>Cmd+V</strong> (o Ctrl+V en Windows).<br/><br/><strong>✨ Mágico:</strong> Al cargar una imagen, sus colores principales se extraerán automáticamente y se agregarán a tu paleta de colores.",
         side: "bottom",
         align: "start",
       },
@@ -190,7 +240,7 @@ const ImageEditor: React.FC = () => {
       popover: {
         title: "Selector de Colores 🎨",
         description:
-          "Elige el color que quieres usar para tus anotaciones y elementos. El color se aplicará a flechas, formas, texto y más.",
+          "Elige el color que quieres usar para tus anotaciones y elementos. El color se aplicará a flechas, formas, texto y más.<br/><br/><strong>✨ Tip:</strong> Cuando cargues una imagen, sus colores principales se extraerán automáticamente y se agregarán a esta paleta para que puedas usarlos en tus anotaciones.",
         side: "right",
         align: "start",
       },
@@ -231,6 +281,16 @@ const ImageEditor: React.FC = () => {
         title: "Panel de Capas 📚",
         description:
           "Gestiona el orden de tus elementos con <strong>drag and drop</strong> arrastrando el ícono de agarre. También puedes usar <strong>[</strong> y <strong>]</strong> para mover capas, o <strong>Ctrl+[</strong> y <strong>Ctrl+]</strong> para enviar al fondo/traer al frente.",
+        side: "right",
+        align: "center",
+      },
+    },
+    {
+      element: "#background-selector",
+      popover: {
+        title: "Fondo del Canvas 🖼️",
+        description:
+          "Elige el color de fondo para tu canvas. Puedes elegir entre blanco, negro, o el color <strong>vibrant</strong> extraído automáticamente de tu imagen (si está disponible). El fondo se actualiza automáticamente cuando cargas una imagen.",
         side: "right",
         align: "center",
       },
@@ -334,7 +394,7 @@ const ImageEditor: React.FC = () => {
     }
   };
 
-  const handleBackgroundChange = (color: "#ffffff" | "#000000") => {
+  const handleBackgroundChange = (color: string) => {
     setCanvasBackground(color);
     setBackgroundColor(color);
   };
@@ -507,7 +567,7 @@ const ImageEditor: React.FC = () => {
               </SidebarGroupLabel>
               <SidebarGroupContent className="px-4 py-3">
                 <div className="grid grid-cols-3 gap-3">
-                  {AVAILABLE_COLORS.map(({ color, title }) => (
+                  {availableColors.map(({ color, title }) => (
                     <button
                       key={color}
                       onClick={() => setCurrentColor(color)}
@@ -521,6 +581,11 @@ const ImageEditor: React.FC = () => {
                     />
                   ))}
                 </div>
+                {imagePalette && (
+                  <p className="text-xs text-gray-400 mt-2 italic">
+                    Colores extraídos de la imagen
+                  </p>
+                )}
               </SidebarGroupContent>
             </SidebarGroup>
 
@@ -590,12 +655,16 @@ const ImageEditor: React.FC = () => {
             <Separator className="bg-gray-700" />
 
             {/* Selector de Fondo del Canvas */}
-            <SidebarGroup>
+            <SidebarGroup id="background-selector">
               <SidebarGroupLabel className="text-gray-200 font-semibold">
                 Fondo del canvas
               </SidebarGroupLabel>
               <SidebarGroupContent className="px-4 py-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div
+                  className={`grid gap-3 ${
+                    imagePalette?.vibrant ? "grid-cols-3" : "grid-cols-2"
+                  }`}
+                >
                   <button
                     onClick={() => handleBackgroundChange("#ffffff")}
                     className={`h-12 rounded-lg border-2 transition-all ${
@@ -624,7 +693,30 @@ const ImageEditor: React.FC = () => {
                       Negro
                     </span>
                   </button>
+                  {imagePalette?.vibrant && (
+                    <button
+                      onClick={() =>
+                        handleBackgroundChange(imagePalette.vibrant!)
+                      }
+                      className={`h-12 rounded-lg border-2 transition-all ${
+                        canvasBackground === imagePalette.vibrant
+                          ? "border-white ring-2 ring-white/50 scale-105"
+                          : "border-gray-600 hover:border-gray-500"
+                      }`}
+                      style={{ backgroundColor: imagePalette.vibrant }}
+                      title="Fondo Vibrant (de la imagen)"
+                    >
+                      <span className="text-xs text-white font-semibold">
+                        Vibrant
+                      </span>
+                    </button>
+                  )}
                 </div>
+                {imagePalette?.vibrant && (
+                  <p className="text-xs text-gray-400 mt-2 italic">
+                    Color vibrant extraído de la imagen
+                  </p>
+                )}
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
