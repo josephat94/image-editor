@@ -1096,15 +1096,43 @@ const ImageEditor: React.FC = () => {
                     {isCanvasEmpty && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <div className="text-center p-8">
-                          <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4 opacity-50" />
-                          <p className="text-gray-400 text-lg mb-2 font-medium">
+                          <Upload
+                            className="w-16 h-16 mx-auto mb-4 opacity-50"
+                            style={{
+                              color: imagePalette?.lightVibrant || "#9ca3af",
+                            }}
+                          />
+                          <p
+                            className="text-lg mb-2 font-medium"
+                            style={{
+                              color: imagePalette?.lightVibrant || "#9ca3af",
+                            }}
+                          >
                             Pega una imagen con{" "}
-                            <kbd className="px-2 py-1 bg-gray-700 rounded text-sm text-gray-300">
+                            <kbd
+                              className="px-2 py-1 rounded text-sm"
+                              style={{
+                                backgroundColor: imagePalette?.lightVibrant
+                                  ? `${imagePalette.lightVibrant}20`
+                                  : "#374151",
+                                color: imagePalette?.lightVibrant || "#d1d5db",
+                                border: imagePalette?.lightVibrant
+                                  ? `1px solid ${imagePalette.lightVibrant}40`
+                                  : "none",
+                              }}
+                            >
                               Cmd+V
                             </kbd>{" "}
                             o sube un archivo
                           </p>
-                          <p className="text-gray-500 text-sm">
+                          <p
+                            className="text-sm"
+                            style={{
+                              color: imagePalette?.lightVibrant
+                                ? `${imagePalette.lightVibrant}CC`
+                                : "#6b7280",
+                            }}
+                          >
                             Arrastra una imagen aquí o haz clic en el botón de
                             subir
                           </p>
