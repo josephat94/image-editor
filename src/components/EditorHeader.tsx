@@ -3,6 +3,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { HelpCircle } from "lucide-react";
+// import { MessageSquare } from "lucide-react"; // Deshabilitado junto con FeedbackSheet
 import {
   Tooltip,
   TooltipContent,
@@ -11,6 +12,7 @@ import {
 import { useUIStore } from "@/stores/uiStore";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+// import { FeedbackSheet } from "@/components/FeedbackSheet";
 
 interface EditorHeaderProps {
   onRestartTour: () => void;
@@ -39,8 +41,39 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
       >
         {isMobile ? "QS" : "QuickSnap"}
       </h1>
-      {!isMobile && (
-        <div className="ml-auto">
+      <div
+        className={cn("ml-auto flex items-center gap-2", isMobile && "gap-1")}
+      >
+        {/* Feedback deshabilitado - oculto pero no borrado */}
+        {/* <FeedbackSheet>
+          {isMobile ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-300 hover:text-white h-9 w-9"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span className="sr-only">Enviar feedback</span>
+            </Button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-gray-300 hover:text-white"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span className="sr-only">Enviar feedback</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Enviar feedback</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </FeedbackSheet> */}
+        {!isMobile && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -56,8 +89,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
               <p>Ver tour de bienvenida</p>
             </TooltipContent>
           </Tooltip>
-        </div>
-      )}
+        )}
+      </div>
     </header>
   );
 };
