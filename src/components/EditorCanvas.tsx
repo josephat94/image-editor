@@ -5,6 +5,7 @@ import { useEditorStore } from "@/stores/editorStore";
 import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { CanvasResizeHandles } from "@/components/CanvasResizeHandles";
 
 export const EditorCanvas: React.FC = () => {
   const { canvasRef, isReady, getLayersList } = useCanvasContext();
@@ -49,6 +50,8 @@ export const EditorCanvas: React.FC = () => {
             height: "auto",
           }}
         />
+        {/* Handles de resize del canvas */}
+        <CanvasResizeHandles />
         {/* Empty State */}
         {isCanvasEmpty && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">

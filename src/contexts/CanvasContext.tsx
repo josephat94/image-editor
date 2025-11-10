@@ -1,8 +1,11 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext } from "react";
+import type { ReactNode } from "react";
+import { fabric } from "fabric";
 import { useCanvas } from "@/hooks/useCanvas";
 
 interface CanvasContextType {
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  fabricCanvas: fabric.Canvas | null;
   isReady: boolean;
   addImage: (imageUrl: string) => void;
   addArrow: () => void;
@@ -16,11 +19,18 @@ interface CanvasContextType {
   duplicateSelected: () => void;
   clearCanvas: () => void;
   downloadImage: () => void;
-  copyToClipboard: () => Promise<boolean>;
+  copyToClipboard: () => Promise<boolean | undefined>;
   undo: () => void;
   redo: () => void;
   toggleTextMode: () => void;
   isTextMode: boolean;
+  showResizeHandles: boolean;
+  setShowResizeHandles: (show: boolean) => void;
+  resizeCanvas: (
+    width: number,
+    height: number,
+    saveToHistory?: boolean
+  ) => void;
   currentFont: string;
   setCurrentFont: (font: string) => void;
   currentColor: string;

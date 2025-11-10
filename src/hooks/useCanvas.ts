@@ -20,6 +20,7 @@ export const useCanvas = () => {
   const [isRectangleMode, setIsRectangleMode] = useState(false);
   const [isCircleMode, setIsCircleMode] = useState(false);
   const [isTextMode, setIsTextMode] = useState(false);
+  const [showResizeHandles, setShowResizeHandles] = useState(false);
   const [annotationCounter, setAnnotationCounter] = useState(1);
   const [layersVersion, setLayersVersion] = useState(0); // Para forzar re-render de la lista de capas
   const [historyVersion, setHistoryVersion] = useState(0); // Para forzar re-render del historial
@@ -144,6 +145,15 @@ export const useCanvas = () => {
       }
     });
 
+    // Ocultar handles de resize cuando se selecciona un objeto
+    canvas.on("selection:created", () => {
+      setShowResizeHandles(false);
+    });
+
+    canvas.on("selection:updated", () => {
+      setShowResizeHandles(false);
+    });
+
     // Detectar cuando EMPIEZA a modificar (mover, escalar, rotar)
     canvas.on("object:moving", () => {
       isModifyingRef.current = true;
@@ -220,6 +230,30 @@ export const useCanvas = () => {
     };
 
     canvas.on("mouse:dblclick", handleDoubleClick);
+
+    // Manejar click en área vacía para mostrar handles de resize
+    const handleEmptyAreaClick = (e: fabric.IEvent) => {
+      // Solo si no hay objeto seleccionado y no estamos en ningún modo de dibujo
+      // Esperar un poco para asegurarnos de que no es un click en un objeto
+      setTimeout(() => {
+        const activeObject = canvas.getActiveObject();
+        if (
+          !activeObject &&
+          !e.target &&
+          !isTextMode &&
+          !isArrowMode &&
+          !isRectangleMode &&
+          !isCircleMode &&
+          !isBlurMode
+        ) {
+          setShowResizeHandles(true);
+        } else {
+          setShowResizeHandles(false);
+        }
+      }, 50);
+    };
+
+    canvas.on("mouse:down", handleEmptyAreaClick);
 
     // Manejar teclas Delete y Backspace para eliminar elementos seleccionados
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1838,6 +1872,37 @@ export const useCanvas = () => {
     );
   };
 
+  // Función para cambiar el tamaño del canvas
+  const resizeCanvas = (
+    newWidth: number,
+    newHeight: number,
+    saveToHistory: boolean = true
+  ) => {
+    if (!fabricCanvasRef.current) return;
+
+    lastActionRef.current = "background"; // Trackear como cambio de canvas
+    const canvas = fabricCanvasRef.current;
+
+    // Validar tamaños mínimos
+    const minWidth = 200;
+    const minHeight = 200;
+    const maxWidth = 5000;
+    const maxHeight = 5000;
+
+    const width = Math.max(minWidth, Math.min(maxWidth, newWidth));
+    const height = Math.max(minHeight, Math.min(maxHeight, newHeight));
+
+    // Cambiar dimensiones del canvas
+    canvas.setDimensions({ width, height });
+    canvas.renderAll();
+
+    // Guardar en historial solo si se solicita (para evitar guardar en cada movimiento del drag)
+    if (saveToHistory) {
+      saveCanvasState("background");
+      setLayersVersion((v) => v + 1);
+    }
+  };
+
   // Funciones de control de capas (z-index)
   const bringToFront = () => {
     if (!fabricCanvasRef.current) return;
@@ -2158,6 +2223,9 @@ export const useCanvas = () => {
     redo,
     toggleTextMode,
     isTextMode,
+    showResizeHandles,
+    setShowResizeHandles,
+    resizeCanvas,
     currentFont,
     setCurrentFont,
     currentColor,
