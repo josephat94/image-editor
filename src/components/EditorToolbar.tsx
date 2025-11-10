@@ -110,13 +110,16 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             className="hidden"
             id="file-upload"
           />
-          <label htmlFor="file-upload">
-            <TooltipButton content="Subir imagen">
-              <Button variant="outline" size="icon" className="cursor-pointer">
-                <Upload className="w-4 h-4" />
-              </Button>
-            </TooltipButton>
-          </label>
+          <TooltipButton content="Subir imagen">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => document.getElementById("file-upload")?.click()}
+              className="cursor-pointer"
+            >
+              <Upload className="w-4 h-4" />
+            </Button>
+          </TooltipButton>
         </div>
 
         {/* Divisor */}

@@ -306,6 +306,35 @@ Con **auto-guardado** y **layout automático**, sería una herramienta perfecta 
 - **Estado**: ✅ Completado
 - **Fecha**: Enero 2025
 
+#### 3. Editor de Texto Inline
+
+- ✅ Cambio de `fabric.Text` a `fabric.IText` para edición inline
+- ✅ Modo texto activo con atajo de teclado `T`
+- ✅ Click en canvas crea texto en esa posición (modo texto activo)
+- ✅ Doble click en texto existente para edición inline
+- ✅ Edición directa sobre el canvas (similar a Figma/Canva)
+- ✅ Placeholder "Escribe aquí..." que se reemplaza al escribir
+- ✅ Cursor cambia a "text" cuando modo está activo
+- ✅ Feedback visual claro del estado del modo texto
+- ✅ Integración completa con toolbar desktop y mobile
+- **Estado**: ✅ Completado
+- **Fecha**: Enero 2025
+
+#### 4. Redimensionamiento de Canvas con Drag and Drop
+
+- ✅ Click en área vacía del canvas muestra handles de resize
+- ✅ 8 handles interactivos (4 esquinas + 4 bordes)
+- ✅ Drag and drop para cambiar tamaño en tiempo real
+- ✅ Indicador visual de tamaño actual (ancho × alto)
+- ✅ Borde azul resaltado cuando handles están visibles
+- ✅ Optimización: actualización en tiempo real sin guardar en historial
+- ✅ Guardado único en historial solo al terminar el drag
+- ✅ Validación de tamaños mínimos (200px) y máximos (5000px)
+- ✅ Handles se ocultan automáticamente al seleccionar objetos
+- ✅ Compatible con todos los modos de dibujo existentes
+- **Estado**: ✅ Completado
+- **Fecha**: Enero 2025
+
 ---
 
 ### 🔴 Crítico (Implementar Pronto)
@@ -325,19 +354,6 @@ Con **auto-guardado** y **layout automático**, sería una herramienta perfecta 
 - **Problema**: Las imágenes se centran y se superponen
 - **Solución**: Modo grid o apilar verticalmente automáticamente
 - **Impacto**: ALTO - mejora mucho la experiencia
-- **Prioridad**: ALTA
-- **Complejidad**: MEDIA
-- **Tiempo estimado**: 2-3 días
-- **Estado**: 📝 Pendiente
-
-#### 3. Editor de Texto Inline (Rich Text Editor)
-
-- **Descripción**: Editor inline que se activa con click directo en el canvas
-- **Comportamiento**:
-  - Click en canvas → cursor de texto en esa posición
-  - Escribir directamente → texto aparece en tiempo real
-  - Doble click en texto existente → modo edición inline
-  - Click fuera → guarda y sale del modo edición
 - **Prioridad**: ALTA
 - **Complejidad**: MEDIA
 - **Tiempo estimado**: 2-3 días
@@ -365,15 +381,6 @@ Con **auto-guardado** y **layout automático**, sería una herramienta perfecta 
 - **Prioridad**: MEDIA-ALTA
 - **Complejidad**: MEDIA
 - **Tiempo estimado**: 2-3 días
-- **Estado**: 📝 Pendiente
-
-#### 6. Cambiar Tamaño del Canvas
-
-- **Descripción**: Permitir cambiar tamaño del canvas dinámicamente
-- **Opciones**: Tamaños predefinidos (A4, Letter, etc.) o personalizado
-- **Prioridad**: MEDIA
-- **Complejidad**: MEDIA
-- **Tiempo estimado**: 1-2 días
 - **Estado**: 📝 Pendiente
 
 #### 7. Mejoras de UX para Múltiples Imágenes
@@ -437,24 +444,30 @@ Con **auto-guardado** y **layout automático**, sería una herramienta perfecta 
 | ------------------------------- | ---------- | ----------- | ----------- | ------------- |
 | **✅ Refactorización Completa** | -          | -           | -           | ✅ Completado |
 | **✅ Vista Mobile**             | -          | -           | -           | ✅ Completado |
+| **✅ Editor de Texto Inline**   | -          | -           | -           | ✅ Completado |
+| **✅ Redimensionar Canvas**     | -          | -           | -           | ✅ Completado |
 | Auto-guardado Local             | ALTA       | BAJA        | 1 día       | 📝 Pendiente  |
 | Layout Automático Imágenes      | ALTA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
-| Editor de Texto Inline          | ALTA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
 | Atajo Descargar (Cmd+S)         | MEDIA      | BAJA        | 1 hora      | 📝 Pendiente  |
 | Proyectos Guardados             | MEDIA-ALTA | MEDIA       | 2-3 días    | 📝 Pendiente  |
-| Cambiar Tamaño Canvas           | MEDIA      | MEDIA       | 1-2 días    | 📝 Pendiente  |
 | UX Múltiples Imágenes           | MEDIA      | MEDIA       | 2-3 días    | 📝 Pendiente  |
 | Herramienta Lupa/Zoom           | MEDIA      | MEDIA-ALTA  | 2-3 días    | 📝 Pendiente  |
 | Integración Dev Tools           | BAJA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
 | Extensión Navegador             | BAJA       | ALTA        | 1-2 semanas | 📝 Pendiente  |
 | Plantillas de Anotación         | BAJA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
 
-**Total estimado para críticos:** 5-7 días de desarrollo
-**Total estimado para importantes:** 7-11 días de desarrollo
+**Total estimado para críticos:** 3-4 días de desarrollo
+**Total estimado para importantes:** 5-8 días de desarrollo
 **Total estimado para nice to have:** 2-3 semanas de desarrollo
 
 ---
 
 **Última actualización**: Enero 2025
 **Contexto**: Herramienta de productividad para desarrolladores que documentan evidencias de trabajo
-**Estado del proyecto**: ✅ Código refactorizado y limpio | ✅ Vista mobile completa | 🚀 Listo para nuevas features
+**Estado del proyecto**:
+
+- ✅ Código refactorizado y limpio
+- ✅ Vista mobile completa
+- ✅ Editor de texto inline (similar a Figma/Canva)
+- ✅ Redimensionamiento de canvas con drag and drop
+- 🚀 Listo para nuevas features críticas (auto-guardado y layout automático)

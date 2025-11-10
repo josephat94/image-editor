@@ -67,12 +67,35 @@ const ImageEditorContent: React.FC = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validar que sea una imagen
+      if (!file.type.startsWith("image/")) {
+        alert("Por favor, selecciona un archivo de imagen válido");
+        e.target.value = ""; // Resetear el input
+        return;
+      }
+
+      // Validar que el canvas esté listo
+      if (!isReady) {
+        alert("El editor aún no está listo. Por favor, espera un momento.");
+        e.target.value = ""; // Resetear el input
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const imageUrl = event.target?.result as string;
-        addImage(imageUrl);
+        if (imageUrl) {
+          addImage(imageUrl);
+        }
+      };
+      reader.onerror = () => {
+        alert("Error al leer el archivo. Por favor, intenta de nuevo.");
+        e.target.value = ""; // Resetear el input
       };
       reader.readAsDataURL(file);
+
+      // Resetear el input para permitir seleccionar el mismo archivo nuevamente
+      e.target.value = "";
     }
   };
 
