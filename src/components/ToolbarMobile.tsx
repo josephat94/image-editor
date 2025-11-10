@@ -58,7 +58,8 @@ export const ToolbarMobile: React.FC<ToolbarMobileProps> = ({
     clearCanvas,
   } = useCanvasContext();
 
-  const { copied, setCopied, isRemovingBg, setShowTextInput } = useUIStore();
+  const { copied, setCopied, isRemovingBg } = useUIStore();
+  const { toggleTextMode, isTextMode } = useCanvasContext();
 
   const handleCopyToClipboard = async () => {
     const success = await copyToClipboard();
@@ -74,10 +75,16 @@ export const ToolbarMobile: React.FC<ToolbarMobileProps> = ({
       icon: Upload,
       action: () => document.getElementById("file-upload-mobile")?.click(),
       label: "Subir",
+      active: false,
     },
-    { icon: ArrowRight, action: addArrow, label: "Flecha" },
-    { icon: Type, action: () => setShowTextInput(true), label: "Texto" },
-    { icon: Hash, action: addNumberedAnnotation, label: "Anotación" },
+    { icon: ArrowRight, action: addArrow, label: "Flecha", active: false },
+    { icon: Type, action: toggleTextMode, label: "Texto", active: isTextMode },
+    {
+      icon: Hash,
+      action: addNumberedAnnotation,
+      label: "Anotación",
+      active: false,
+    },
   ];
 
   // Botones secundarios en el menú "Más"
@@ -119,9 +126,13 @@ export const ToolbarMobile: React.FC<ToolbarMobileProps> = ({
             <Button
               key={index}
               onClick={btn.action}
-              variant="ghost"
+              variant={btn.active ? "default" : "ghost"}
               size="icon"
-              className="h-12 w-12 text-gray-300 hover:text-white hover:bg-gray-700"
+              className={`h-12 w-12 ${
+                btn.active
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "text-gray-300 hover:text-white hover:bg-gray-700"
+              }`}
             >
               <btn.icon className="w-5 h-5" />
             </Button>

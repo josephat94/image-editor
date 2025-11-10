@@ -19,6 +19,7 @@ export const useCanvas = () => {
   const [isArrowMode, setIsArrowMode] = useState(false);
   const [isRectangleMode, setIsRectangleMode] = useState(false);
   const [isCircleMode, setIsCircleMode] = useState(false);
+  const [isTextMode, setIsTextMode] = useState(false);
   const [annotationCounter, setAnnotationCounter] = useState(1);
   const [layersVersion, setLayersVersion] = useState(0); // Para forzar re-render de la lista de capas
   const [historyVersion, setHistoryVersion] = useState(0); // Para forzar re-render del historial
@@ -207,6 +208,18 @@ export const useCanvas = () => {
         });
       }
     });
+
+    // Manejar doble click en texto para edición inline
+    const handleDoubleClick = (e: fabric.IEvent) => {
+      if (e.target && e.target.type === "i-text") {
+        const textObj = e.target as fabric.IText;
+        canvas.setActiveObject(textObj);
+        textObj.enterEditing();
+        canvas.renderAll();
+      }
+    };
+
+    canvas.on("mouse:dblclick", handleDoubleClick);
 
     // Manejar teclas Delete y Backspace para eliminar elementos seleccionados
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -824,6 +837,35 @@ export const useCanvas = () => {
     };
   }, [isBlurMode]);
 
+  // Efecto para manejar el modo de texto inline
+  useEffect(() => {
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+
+    const handleTextModeClick = (e: fabric.IEvent) => {
+      if (isTextMode && !e.target) {
+        // Click en espacio vacío del canvas
+        const pointer = canvas.getPointer(e.e as MouseEvent);
+        createTextAtPosition(pointer.x, pointer.y);
+        // Desactivar modo texto después de crear
+        setIsTextMode(false);
+        canvas.defaultCursor = "default";
+        canvas.hoverCursor = "move";
+        canvas.selection = true;
+      }
+    };
+
+    if (isTextMode) {
+      canvas.on("mouse:down", handleTextModeClick);
+    }
+
+    return () => {
+      if (isTextMode) {
+        canvas.off("mouse:down", handleTextModeClick);
+      }
+    };
+  }, [isTextMode, currentFont, currentColor]);
+
   // Efecto para atajos de teclado globales
   useEffect(() => {
     const handleKeyboardShortcuts = (e: KeyboardEvent) => {
@@ -1057,6 +1099,15 @@ export const useCanvas = () => {
     lastActionRef.current = "arrow"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
+    // Desactivar modo texto si está activo
+    if (isTextMode) {
+      setIsTextMode(false);
+      const canvas = fabricCanvasRef.current;
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+      canvas.selection = true;
+    }
+
     // Activar el modo de dibujo de flechas
     setIsArrowMode(true);
     const canvas = fabricCanvasRef.current;
@@ -1072,15 +1123,21 @@ export const useCanvas = () => {
     canvas.hoverCursor = "crosshair";
   };
 
-  const addText = (text: string) => {
+  // Función para crear texto inline en una posición específica
+  const createTextAtPosition = (
+    x: number,
+    y: number,
+    initialText: string = ""
+  ) => {
     if (!fabricCanvasRef.current) return;
 
-    lastActionRef.current = "text"; // Trackear tipo de acción
+    lastActionRef.current = "text";
     const canvas = fabricCanvasRef.current;
 
-    const textObj = new fabric.Text(text, {
-      left: 100,
-      top: 100,
+    // Usar IText para edición inline
+    const textObj = new fabric.IText(initialText || "Escribe aquí...", {
+      left: x,
+      top: y,
       fontSize: 24,
       fontFamily: currentFont,
       fontWeight: "600",
@@ -1089,31 +1146,45 @@ export const useCanvas = () => {
       padding: 8,
       selectable: true,
       evented: true,
-      opacity: 0,
-      scaleX: 0.5,
-      scaleY: 0.5,
+      editable: true,
     });
 
     canvas.add(textObj);
-    // Asegurar que el texto esté siempre al frente
     textObj.bringToFront();
 
-    // Animación de entrada
-    textObj.animate("opacity", 1, {
-      duration: 400,
-      onChange: canvas.renderAll.bind(canvas),
-    });
-    textObj.animate("scaleX", 1, {
-      duration: 400,
-      easing: fabric.util.ease.easeOutBack,
-      onChange: canvas.renderAll.bind(canvas),
-    });
-    textObj.animate("scaleY", 1, {
-      duration: 400,
-      easing: fabric.util.ease.easeOutBack,
-      onChange: canvas.renderAll.bind(canvas),
-    });
-    // El debounce en object:added se encargará de guardar
+    // Activar edición inmediatamente si hay texto inicial, o si está vacío
+    canvas.setActiveObject(textObj);
+    textObj.enterEditing();
+    textObj.selectAll();
+
+    // Si el texto es el placeholder, seleccionarlo todo para que se reemplace al escribir
+    if (!initialText) {
+      setTimeout(() => {
+        textObj.selectAll();
+        canvas.renderAll();
+      }, 100);
+    }
+
+    canvas.renderAll();
+  };
+
+  // Función legacy para compatibilidad (cuando se llama desde TextInputPanel)
+  const addText = (text: string) => {
+    if (!fabricCanvasRef.current) return;
+
+    // Si hay un objeto seleccionado y es texto, reemplazarlo
+    const activeObject = fabricCanvasRef.current.getActiveObject();
+    if (activeObject && activeObject.type === "i-text") {
+      (activeObject as fabric.IText).set("text", text);
+      fabricCanvasRef.current.renderAll();
+      return;
+    }
+
+    // Si no, crear nuevo texto en el centro
+    const canvas = fabricCanvasRef.current;
+    const centerX = canvas.width! / 2;
+    const centerY = canvas.height! / 2;
+    createTextAtPosition(centerX, centerY, text);
   };
 
   const addRectangle = () => {
@@ -1121,6 +1192,15 @@ export const useCanvas = () => {
 
     lastActionRef.current = "rectangle"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
+
+    // Desactivar modo texto si está activo
+    if (isTextMode) {
+      setIsTextMode(false);
+      const canvas = fabricCanvasRef.current;
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+      canvas.selection = true;
+    }
 
     // Activar el modo de dibujo de rectángulos
     setIsRectangleMode(true);
@@ -1143,6 +1223,15 @@ export const useCanvas = () => {
     lastActionRef.current = "circle"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
+    // Desactivar modo texto si está activo
+    if (isTextMode) {
+      setIsTextMode(false);
+      const canvas = fabricCanvasRef.current;
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+      canvas.selection = true;
+    }
+
     // Activar el modo de dibujo de círculos
     setIsCircleMode(true);
     const canvas = fabricCanvasRef.current;
@@ -1163,6 +1252,15 @@ export const useCanvas = () => {
 
     lastActionRef.current = "blur"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
+
+    // Desactivar modo texto si está activo
+    if (isTextMode) {
+      setIsTextMode(false);
+      const canvas = fabricCanvasRef.current;
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+      canvas.selection = true;
+    }
 
     // Activar el modo de dibujo de blur
     setIsBlurMode(true);
@@ -1709,8 +1807,23 @@ export const useCanvas = () => {
   };
 
   const toggleTextMode = () => {
-    // Esta función será llamada desde ImageEditor para activar el input de texto
-    return "text-mode-toggle";
+    setIsTextMode((prev) => !prev);
+
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+
+    if (!isTextMode) {
+      // Activar modo texto
+      canvas.defaultCursor = "text";
+      canvas.hoverCursor = "text";
+      // Desactivar selección de otros objetos temporalmente
+      canvas.selection = false;
+    } else {
+      // Desactivar modo texto
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+      canvas.selection = true;
+    }
   };
 
   const setBackgroundColor = (color: string) => {
@@ -2044,6 +2157,7 @@ export const useCanvas = () => {
     undo,
     redo,
     toggleTextMode,
+    isTextMode,
     currentFont,
     setCurrentFont,
     currentColor,

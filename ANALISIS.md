@@ -279,115 +279,182 @@ Con **auto-guardado** y **layout automático**, sería una herramienta perfecta 
 
 ---
 
-## 🗺️ Roadmap - Features Pendientes
+## 🗺️ Roadmap - Features
 
-### 1. Editor de Texto Inline (Rich Text Editor)
+### ✅ Completado Recientemente
 
-**Descripción:**
+#### 1. Refactorización Completa del Código
 
-- La herramienta de texto debe funcionar como un editor inline que se activa con un click directo en el canvas
-- No debe ser un formulario donde se agregue el texto
-- Debe permitir editar texto directamente sobre el canvas (similar a Figma, Canva, etc.)
+- ✅ Separación de componentes modulares (EditorHeader, EditorToolbar, EditorSidebar, etc.)
+- ✅ Implementación de Zustand para estado global
+- ✅ Context API para compartir instancia del canvas
+- ✅ Hooks personalizados (useKeyboardShortcuts, usePasteImage)
+- ✅ Organización de constantes y tipos
+- ✅ Reducción de ImageEditor de 1245 a 193 líneas
+- **Estado**: ✅ Completado
+- **Fecha**: Enero 2025
 
-**Comportamiento Esperado:**
+#### 2. Vista Mobile Completa
 
-- Click en el canvas → aparece cursor de texto en esa posición
-- Escribir directamente → el texto aparece en tiempo real
-- Doble click en texto existente → modo edición inline
-- Click fuera → guarda y sale del modo edición
-- Permitir editar texto existente directamente sin formularios
-
-**Consideraciones Técnicas:**
-
-- Fabric.js tiene soporte para `fabric.IText` que permite edición inline
-- Necesita manejar eventos de click en el canvas
-- Detectar si el click es en un objeto de texto existente o en espacio vacío
-- Modo "texto" activo vs modo normal
-- Atajo de teclado `T` para activar modo texto
-
-**Prioridad:** ALTA
-**Complejidad:** MEDIA
-**Tiempo estimado:** 2-3 días
+- ✅ Toolbar mobile inferior fijo con botones principales
+- ✅ Menú "Más" con todas las herramientas organizadas
+- ✅ Panel de historial como bottom sheet en mobile
+- ✅ Canvas optimizado para mobile (ancho completo)
+- ✅ Header compacto para mobile
+- ✅ Botones táctiles grandes (48x48px)
+- ✅ Toolbar sticky en desktop
+- **Estado**: ✅ Completado
+- **Fecha**: Enero 2025
 
 ---
 
-### 2. Cambiar Tamaño del Canvas
+### 🔴 Crítico (Implementar Pronto)
 
-**Descripción:**
+#### 1. Auto-guardado Local
 
-- Permitir al usuario cambiar el tamaño del canvas dinámicamente
-- Opciones: tamaños predefinidos (A4, Letter, etc.) o personalizado
-- Ajustar contenido existente al nuevo tamaño (escalar o mantener posición)
+- **Problema**: Si cierras el navegador, pierdes todo
+- **Solución**: localStorage automático cada 5 segundos
+- **Impacto**: CRÍTICO para el flujo de trabajo
+- **Prioridad**: ALTA
+- **Complejidad**: BAJA
+- **Tiempo estimado**: 1 día
+- **Estado**: 📝 Pendiente
 
-**Comportamiento Esperado:**
+#### 2. Layout Automático para Múltiples Imágenes
 
-- Menú/configuración para cambiar tamaño
-- Tamaños predefinidos: A4, Letter, 1920x1080, 1080x1920, etc.
-- Opción "Personalizado" para ingresar ancho/alto
-- Opción de mantener proporción o no
-- Ajustar contenido: "Escalar todo", "Mantener posición", "Centrar"
+- **Problema**: Las imágenes se centran y se superponen
+- **Solución**: Modo grid o apilar verticalmente automáticamente
+- **Impacto**: ALTO - mejora mucho la experiencia
+- **Prioridad**: ALTA
+- **Complejidad**: MEDIA
+- **Tiempo estimado**: 2-3 días
+- **Estado**: 📝 Pendiente
 
-**Consideraciones Técnicas:**
+#### 3. Editor de Texto Inline (Rich Text Editor)
 
-- Fabric.js permite cambiar `canvas.setDimensions()`
-- Necesita recalcular posiciones de objetos existentes
-- Guardar tamaño en el estado del proyecto
-- Validar tamaños mínimos/máximos
-- UI: Modal o panel de configuración
-
-**Prioridad:** MEDIA
-**Complejidad:** MEDIA
-**Tiempo estimado:** 1-2 días
-
----
-
-### 3. Herramienta de Lupa/Zoom Local
-
-**Descripción:**
-
-- Agregar una herramienta que funcione como una lupa en una sección específica del canvas
-- Permite ver con zoom un punto específico sin afectar el zoom general del canvas
-- Útil para detalles pequeños o texto pequeño en screenshots
-
-**Comportamiento Esperado:**
-
-- Activar herramienta (botón o atajo)
-- Click y arrastrar en el canvas → muestra área con zoom
-- Zoom configurable (2x, 3x, 4x, etc.)
-- Ventana flotante o overlay que muestra la zona ampliada
-- Click fuera o ESC para cerrar
-
-**Consideraciones Técnicas:**
-
-- Usar `canvas.getContext('2d').drawImage()` para capturar región
-- Crear overlay/modal con la imagen ampliada
-- Seguir el mouse o mostrar en posición fija
-- Opciones: zoom fijo vs zoom dinámico
-- Performance: optimizar para no afectar rendimiento
-
-**Alternativas de Implementación:**
-
-1. **Overlay flotante**: Ventana que sigue el mouse mostrando zoom
-2. **Panel lateral**: Panel fijo que muestra zoom de área seleccionada
-3. **Modal temporal**: Click → modal con zoom de esa área
-
-**Prioridad:** MEDIA
-**Complejidad:** MEDIA-ALTA
-**Tiempo estimado:** 2-3 días
+- **Descripción**: Editor inline que se activa con click directo en el canvas
+- **Comportamiento**:
+  - Click en canvas → cursor de texto en esa posición
+  - Escribir directamente → texto aparece en tiempo real
+  - Doble click en texto existente → modo edición inline
+  - Click fuera → guarda y sale del modo edición
+- **Prioridad**: ALTA
+- **Complejidad**: MEDIA
+- **Tiempo estimado**: 2-3 días
+- **Estado**: 📝 Pendiente
 
 ---
 
-## 📋 Resumen de Features Pendientes
+### 🟡 Importante (Próximas 2 Semanas)
 
-| Feature                | Prioridad | Complejidad | Tiempo   | Estado       |
-| ---------------------- | --------- | ----------- | -------- | ------------ |
-| Editor de Texto Inline | ALTA      | MEDIA       | 2-3 días | 📝 Pendiente |
-| Cambiar Tamaño Canvas  | MEDIA     | MEDIA       | 1-2 días | 📝 Pendiente |
-| Herramienta Lupa/Zoom  | MEDIA     | MEDIA-ALTA  | 2-3 días | 📝 Pendiente |
+#### 4. Atajo para Descargar
 
-**Total estimado:** 5-8 días de desarrollo
+- **Problema**: Tener que hacer clic en descargar cada vez
+- **Solución**: Cmd+S para descargar directamente
+- **Impacto**: MEDIO - ahorra tiempo
+- **Prioridad**: MEDIA
+- **Complejidad**: BAJA
+- **Tiempo estimado**: 1 hora
+- **Estado**: 📝 Pendiente
+
+#### 5. Proyectos Guardados
+
+- **Problema**: No puedes tener varias evidencias abiertas
+- **Solución**: Guardar proyectos con nombre (ej: "Feature-X", "Bug-123")
+- **Impacto**: ALTO - permite trabajar en múltiples tareas
+- **Prioridad**: MEDIA-ALTA
+- **Complejidad**: MEDIA
+- **Tiempo estimado**: 2-3 días
+- **Estado**: 📝 Pendiente
+
+#### 6. Cambiar Tamaño del Canvas
+
+- **Descripción**: Permitir cambiar tamaño del canvas dinámicamente
+- **Opciones**: Tamaños predefinidos (A4, Letter, etc.) o personalizado
+- **Prioridad**: MEDIA
+- **Complejidad**: MEDIA
+- **Tiempo estimado**: 1-2 días
+- **Estado**: 📝 Pendiente
+
+#### 7. Mejoras de UX para Múltiples Imágenes
+
+- **Problema**: Difícil seleccionar imagen específica cuando hay muchas
+- **Solución**:
+  - Miniaturas en sidebar
+  - Seleccionar imagen específica fácilmente
+  - Reordenar imágenes arrastrando
+- **Impacto**: MEDIO - mejora organización
+- **Prioridad**: MEDIA
+- **Complejidad**: MEDIA
+- **Tiempo estimado**: 2-3 días
+- **Estado**: 📝 Pendiente
 
 ---
 
-**Última actualización**: 2025
+### 🟢 Nice to Have (Largo Plazo)
+
+#### 8. Herramienta de Lupa/Zoom Local
+
+- **Descripción**: Lupa para ver con zoom un punto específico del canvas
+- **Comportamiento**: Click y arrastrar → muestra área con zoom configurable
+- **Prioridad**: MEDIA
+- **Complejidad**: MEDIA-ALTA
+- **Tiempo estimado**: 2-3 días
+- **Estado**: 📝 Pendiente
+
+#### 9. Integración con Herramientas Dev
+
+- Botón "Copiar para Jira/GitHub"
+- Formato optimizado para issues
+- Watermark opcional con info del proyecto
+- **Prioridad**: BAJA
+- **Complejidad**: MEDIA
+- **Tiempo estimado**: 2-3 días
+- **Estado**: 📝 Pendiente
+
+#### 10. Extensión de Navegador
+
+- Capturar screenshot directamente
+- Abrir QuickSnap con imagen ya cargada
+- **Prioridad**: BAJA
+- **Complejidad**: ALTA
+- **Tiempo estimado**: 1-2 semanas
+- **Estado**: 📝 Pendiente
+
+#### 11. Plantillas de Anotación
+
+- Guardar "estilos" de anotación (ej: "Bug report", "Feature demo")
+- **Prioridad**: BAJA
+- **Complejidad**: MEDIA
+- **Tiempo estimado**: 2-3 días
+- **Estado**: 📝 Pendiente
+
+---
+
+## 📋 Resumen de Features
+
+| Feature                         | Prioridad  | Complejidad | Tiempo      | Estado        |
+| ------------------------------- | ---------- | ----------- | ----------- | ------------- |
+| **✅ Refactorización Completa** | -          | -           | -           | ✅ Completado |
+| **✅ Vista Mobile**             | -          | -           | -           | ✅ Completado |
+| Auto-guardado Local             | ALTA       | BAJA        | 1 día       | 📝 Pendiente  |
+| Layout Automático Imágenes      | ALTA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
+| Editor de Texto Inline          | ALTA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
+| Atajo Descargar (Cmd+S)         | MEDIA      | BAJA        | 1 hora      | 📝 Pendiente  |
+| Proyectos Guardados             | MEDIA-ALTA | MEDIA       | 2-3 días    | 📝 Pendiente  |
+| Cambiar Tamaño Canvas           | MEDIA      | MEDIA       | 1-2 días    | 📝 Pendiente  |
+| UX Múltiples Imágenes           | MEDIA      | MEDIA       | 2-3 días    | 📝 Pendiente  |
+| Herramienta Lupa/Zoom           | MEDIA      | MEDIA-ALTA  | 2-3 días    | 📝 Pendiente  |
+| Integración Dev Tools           | BAJA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
+| Extensión Navegador             | BAJA       | ALTA        | 1-2 semanas | 📝 Pendiente  |
+| Plantillas de Anotación         | BAJA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
+
+**Total estimado para críticos:** 5-7 días de desarrollo
+**Total estimado para importantes:** 7-11 días de desarrollo
+**Total estimado para nice to have:** 2-3 semanas de desarrollo
+
+---
+
+**Última actualización**: Enero 2025
 **Contexto**: Herramienta de productividad para desarrolladores que documentan evidencias de trabajo
+**Estado del proyecto**: ✅ Código refactorizado y limpio | ✅ Vista mobile completa | 🚀 Listo para nuevas features

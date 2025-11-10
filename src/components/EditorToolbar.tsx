@@ -74,7 +74,8 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     clearCanvas,
   } = useCanvasContext();
 
-  const { copied, setCopied, isRemovingBg, setShowTextInput } = useUIStore();
+  const { copied, setCopied, isRemovingBg } = useUIStore();
+  const { toggleTextMode, isTextMode } = useCanvasContext();
 
   // En mobile, mostrar el toolbar mobile
   if (isMobile) {
@@ -199,11 +200,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </Button>
           </TooltipButton>
 
-          <TooltipButton content="Texto (T)">
+          <TooltipButton content="Texto (T) - Click en canvas para agregar">
             <Button
-              onClick={() => setShowTextInput(true)}
-              variant="outline"
+              onClick={toggleTextMode}
+              variant={isTextMode ? "default" : "outline"}
               size="icon"
+              className={isTextMode ? "bg-blue-600 hover:bg-blue-700" : ""}
             >
               <Type className="w-4 h-4" />
             </Button>

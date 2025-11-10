@@ -19,6 +19,8 @@ interface CanvasContextType {
   copyToClipboard: () => Promise<boolean>;
   undo: () => void;
   redo: () => void;
+  toggleTextMode: () => void;
+  isTextMode: boolean;
   currentFont: string;
   setCurrentFont: (font: string) => void;
   currentColor: string;

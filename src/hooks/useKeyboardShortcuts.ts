@@ -1,13 +1,18 @@
 import { useEffect } from "react";
 import { useCanvasContext } from "@/contexts/CanvasContext";
-import { useUIStore } from "@/stores/uiStore";
 
 export const useKeyboardShortcuts = () => {
-  const { undo, redo, sendBackwards, bringForward, sendToBack, bringToFront } =
-    useCanvasContext();
-  const { setShowTextInput } = useUIStore();
+  const {
+    undo,
+    redo,
+    sendBackwards,
+    bringForward,
+    sendToBack,
+    bringToFront,
+    toggleTextMode,
+  } = useCanvasContext();
 
-  // Manejar atajo de teclado para texto (T)
+  // Manejar atajo de teclado para texto (T) - activa modo texto inline
   useEffect(() => {
     const handleTextShortcut = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -28,7 +33,7 @@ export const useKeyboardShortcuts = () => {
         !e.altKey
       ) {
         e.preventDefault();
-        setShowTextInput(true);
+        toggleTextMode();
       }
     };
 
@@ -36,7 +41,7 @@ export const useKeyboardShortcuts = () => {
     return () => {
       document.removeEventListener("keydown", handleTextShortcut);
     };
-  }, [setShowTextInput]);
+  }, [toggleTextMode]);
 
   // Manejar atajos Ctrl+Z (Undo) y Ctrl+Shift+Z (Redo)
   useEffect(() => {

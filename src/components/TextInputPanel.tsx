@@ -2,11 +2,42 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/uiStore";
 import { useCanvasContext } from "@/contexts/CanvasContext";
+import { Type } from "lucide-react";
 
 export const TextInputPanel: React.FC = () => {
   const { showTextInput, setShowTextInput, textInput, setTextInput } =
     useUIStore();
-  const { addText, currentFont, setCurrentFont } = useCanvasContext();
+  const { addText, currentFont, setCurrentFont, toggleTextMode, isTextMode } =
+    useCanvasContext();
+
+  // Si está en modo texto inline, mostrar indicador en lugar del input
+  if (isTextMode) {
+    return (
+      <div className="mb-4 p-4 bg-blue-500/20 border-2 border-blue-500 rounded-lg">
+        <div className="flex items-center gap-3">
+          <Type className="w-5 h-5 text-blue-400" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-blue-200">
+              Modo texto activo
+            </p>
+            <p className="text-xs text-blue-300">
+              Haz click en el canvas para agregar texto. Presiona{" "}
+              <kbd className="px-1.5 py-0.5 bg-blue-600 rounded text-xs">T</kbd>{" "}
+              nuevamente para cancelar.
+            </p>
+          </div>
+          <Button
+            onClick={toggleTextMode}
+            variant="outline"
+            size="sm"
+            className="border-blue-400 text-blue-200 hover:bg-blue-500/20"
+          >
+            Cancelar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!showTextInput) return null;
 
