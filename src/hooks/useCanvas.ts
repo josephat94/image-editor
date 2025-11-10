@@ -3,17 +3,13 @@ import { fabric } from "fabric";
 import { removeBackground } from "@imgly/background-removal";
 import type { Config } from "@imgly/background-removal";
 import { Vibrant } from "node-vibrant/browser";
+import { useEditorStore } from "@/stores/editorStore";
 
-export const useCanvas = (
-  onPaletteChange: (palette: {
-    vibrant?: string;
-    muted?: string;
-    darkVibrant?: string;
-    darkMuted?: string;
-    lightVibrant?: string;
-    lightMuted?: string;
-  }) => void
-) => {
+export const useCanvas = () => {
+  const { setImagePalette, setCanvasBackground } = useEditorStore();
+
+  // Necesitamos una referencia a setBackgroundColor que se define más abajo
+  // Por ahora, lo manejaremos de otra forma
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -905,7 +901,14 @@ export const useCanvas = (
           darkMuted: palette.DarkMuted?.hex,
           lightMuted: palette.LightMuted?.hex,
         };
-        onPaletteChange(hexas);
+        setImagePalette(hexas);
+
+        // Si hay un color vibrant, actualizar el fondo del canvas automáticamente
+        if (hexas.vibrant && fabricCanvasRef.current) {
+          setCanvasBackground(hexas.vibrant);
+          fabricCanvasRef.current.backgroundColor = hexas.vibrant;
+          fabricCanvasRef.current.renderAll();
+        }
       });
 
     fabric.Image.fromURL(imageUrl, (img) => {
