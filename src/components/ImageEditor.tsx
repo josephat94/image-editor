@@ -14,12 +14,14 @@ import { usePasteImage } from "@/hooks/usePasteImage";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useUIStore } from "@/stores/uiStore";
 import { TOUR_STEPS } from "@/constants/tourSteps";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import type { DriveStep } from "driver.js";
 
 const ImageEditorContent: React.FC = () => {
   const { isReady, addImage, removeImageBackground } = useCanvasContext();
   const { open } = useSidebar();
+  const isMobile = useIsMobile();
   const {
     isHistoryPanelOpen,
     setHistoryPanelOpen,
@@ -136,8 +138,9 @@ const ImageEditorContent: React.FC = () => {
             {/* Contenido principal */}
             <div
               className={cn(
-                "flex-1 p-6 bg-gray-900 overflow-y-auto overflow-x-hidden transition-all duration-300",
-                isHistoryPanelOpen ? "pr-[22rem]" : "pr-6"
+                "flex-1 p-3 md:p-6 bg-gray-900 overflow-y-auto overflow-x-hidden transition-all duration-300",
+                !isMobile && isHistoryPanelOpen ? "pr-[22rem]" : "pr-3 md:pr-6",
+                "pb-24 md:pb-6" // Espacio para toolbar mobile
               )}
             >
               <div className="w-full max-w-full mx-auto">

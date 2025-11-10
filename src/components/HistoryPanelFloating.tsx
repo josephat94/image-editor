@@ -5,22 +5,95 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { RotateCcw, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useUIStore } from "@/stores/uiStore";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const HistoryPanelFloating: React.FC = () => {
   const { isHistoryPanelOpen, setHistoryPanelOpen } = useUIStore();
   const { getHistoryList, goToHistoryState, clearHistory, historyVersion } =
     useCanvasContext();
+  const isMobile = useIsMobile();
   const history = getHistoryList();
 
+  // En mobile, usar bottom sheet
+  if (isMobile) {
+    return (
+      <Sheet open={isHistoryPanelOpen} onOpenChange={setHistoryPanelOpen}>
+        <SheetTrigger asChild>
+          <Button
+            className="fixed bottom-20 right-4 z-40 h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg md:hidden"
+            size="icon"
+          >
+            <RotateCcw className="w-5 h-5 text-white" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="bottom"
+          className="h-[70vh] bg-gray-900 border-gray-700"
+        >
+          <SheetHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/20 rounded-lg border border-blue-500/30">
+                  <RotateCcw className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <SheetTitle className="text-white">Historial</SheetTitle>
+                  <SheetDescription className="text-gray-400">
+                    {history.length}{" "}
+                    {history.length === 1 ? "cambio" : "cambios"}
+                  </SheetDescription>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "¿Estás seguro de que quieres limpiar todo el historial? Esta acción no se puede deshacer."
+                    )
+                  ) {
+                    clearHistory();
+                  }
+                }}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </SheetHeader>
+          <div className="mt-4 h-full overflow-hidden">
+            <div id="history-panel" className="h-full">
+              <HistoryPanel
+                history={history}
+                onGoToState={goToHistoryState}
+                historyVersion={historyVersion}
+              />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: panel lateral flotante
   return (
     <>
       {/* Panel derecho flotante - Historial */}
       <div
-        className={`fixed right-0 top-0 bottom-0 bg-gray-900 border-l-2 border-gray-700 shadow-2xl z-30 flex flex-col transition-all duration-300 ${
+        className={`fixed right-0 top-0 bottom-0 bg-gray-900 border-l-2 border-gray-700 shadow-2xl z-30 transition-all duration-300 hidden md:flex flex-col ${
           isHistoryPanelOpen ? "w-80" : "w-0"
         }`}
       >
@@ -95,9 +168,9 @@ export const HistoryPanelFloating: React.FC = () => {
         </div>
       </div>
 
-      {/* Botón flotante para abrir el panel de historial */}
+      {/* Botón flotante para abrir el panel de historial (solo desktop) */}
       {!isHistoryPanelOpen && (
-        <div className="fixed right-0 top-1/2 -translate-y-1/2 z-30">
+        <div className="fixed right-0 top-1/2 -translate-y-1/2 z-30 hidden md:block">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

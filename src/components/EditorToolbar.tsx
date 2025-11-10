@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useUIStore } from "@/stores/uiStore";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ToolbarMobile } from "@/components/ToolbarMobile";
 
 // Component Helper for Tooltip
 const TooltipButton = ({
@@ -55,6 +57,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   onFileUpload,
   onRemoveBackground,
 }) => {
+  const isMobile = useIsMobile();
   const {
     undo,
     redo,
@@ -73,6 +76,16 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   const { copied, setCopied, isRemovingBg, setShowTextInput } = useUIStore();
 
+  // En mobile, mostrar el toolbar mobile
+  if (isMobile) {
+    return (
+      <ToolbarMobile
+        onFileUpload={onFileUpload}
+        onRemoveBackground={onRemoveBackground}
+      />
+    );
+  }
+
   const handleCopyToClipboard = async () => {
     const success = await copyToClipboard();
     if (success) {
@@ -82,7 +95,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   };
 
   return (
-    <div className="bg-gray-700 rounded-lg p-4 shadow-inner">
+    <div className="sticky top-0 z-10 bg-gray-700 rounded-lg p-4 shadow-inner md:top-4">
       <div className="flex flex-wrap gap-3 justify-center items-center">
         {/* Sección: Archivo */}
         <div id="file-upload-section" className="flex gap-2 items-center">
