@@ -13,6 +13,7 @@ interface CanvasContextType {
   addRectangle: () => void;
   addCircle: () => void;
   addBlurBox: () => void;
+  addMagnifier: () => void;
   addNumberedAnnotation: () => void;
   resetAnnotationCounter: () => void;
   annotationCounter: number;

@@ -20,6 +20,7 @@ export const useCanvas = () => {
   const [isRectangleMode, setIsRectangleMode] = useState(false);
   const [isCircleMode, setIsCircleMode] = useState(false);
   const [isTextMode, setIsTextMode] = useState(false);
+  const [isMagnifierMode, setIsMagnifierMode] = useState(false);
   const [showResizeHandles, setShowResizeHandles] = useState(false);
   const [annotationCounter, setAnnotationCounter] = useState(1);
   const [layersVersion, setLayersVersion] = useState(0); // Para forzar re-render de la lista de capas
@@ -37,6 +38,7 @@ export const useCanvas = () => {
       | "circle"
       | "blur"
       | "annotation"
+      | "magnifier"
       | "delete"
       | "modify"
       | "layer"
@@ -107,6 +109,19 @@ export const useCanvas = () => {
     startX: 0,
     startY: 0,
     tempBlur: null,
+  });
+
+  // Referencias para el modo de dibujo de lupa
+  const magnifierDrawingRef = useRef<{
+    isDrawing: boolean;
+    startX: number;
+    startY: number;
+    tempMagnifier: fabric.Group | null;
+  }>({
+    isDrawing: false,
+    startX: 0,
+    startY: 0,
+    tempMagnifier: null,
   });
 
   useEffect(() => {
@@ -244,7 +259,8 @@ export const useCanvas = () => {
           !isArrowMode &&
           !isRectangleMode &&
           !isCircleMode &&
-          !isBlurMode
+          !isBlurMode &&
+          !isMagnifierMode
         ) {
           setShowResizeHandles(true);
         } else {
@@ -871,6 +887,285 @@ export const useCanvas = () => {
     };
   }, [isBlurMode]);
 
+  // Función helper para crear un objeto de lupa
+  const createMagnifier = (
+    centerX: number,
+    centerY: number,
+    radius: number,
+    zoomLevel: number = 2,
+    isTemp: boolean = false,
+    callback?: (magnifier: fabric.Group) => void
+  ): void => {
+    if (!fabricCanvasRef.current) {
+      return;
+    }
+
+    const canvas = fabricCanvasRef.current;
+
+    // Crear el círculo exterior (borde de la lupa)
+    const outerCircle = new fabric.Circle({
+      radius: radius,
+      fill: "rgba(255, 255, 255, 0.95)",
+      stroke: "#333",
+      strokeWidth: 3,
+      originX: "center",
+      originY: "center",
+      left: 0,
+      top: 0,
+      selectable: false,
+      evented: false,
+    });
+
+    // Crear el círculo interior (área de zoom)
+    const innerRadius = radius - 8;
+
+    // Calcular el área fuente a capturar (más pequeña que el área visible)
+    const sourceRadius = innerRadius / zoomLevel;
+    const sourceX = Math.max(0, centerX - sourceRadius);
+    const sourceY = Math.max(0, centerY - sourceRadius);
+    const sourceWidth = Math.min(sourceRadius * 2, canvas.width! - sourceX);
+    const sourceHeight = Math.min(sourceRadius * 2, canvas.height! - sourceY);
+
+    // Ocultar temporalmente la lupa si existe para no capturarla a sí misma
+    const existingTempMagnifier = magnifierDrawingRef.current.tempMagnifier;
+    if (existingTempMagnifier && !isTemp) {
+      canvas.remove(existingTempMagnifier);
+      canvas.renderAll();
+    }
+
+    // Usar toDataURL del canvas de fabric para capturar todos los objetos
+    // Esto captura el canvas completo con todos los objetos renderizados
+    const dataUrl = canvas.toDataURL({
+      format: "png",
+      quality: 1,
+      left: sourceX,
+      top: sourceY,
+      width: sourceWidth,
+      height: sourceHeight,
+    });
+
+    // Restaurar la lupa temporal si existía
+    if (existingTempMagnifier && !isTemp) {
+      canvas.add(existingTempMagnifier);
+      canvas.renderAll();
+    }
+
+    // Crear un canvas temporal para escalar la imagen al tamaño de la lupa
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = innerRadius * 2;
+    tempCanvas.height = innerRadius * 2;
+    const tempCtx = tempCanvas.getContext("2d");
+
+    if (!tempCtx) {
+      return;
+    }
+
+    // Cargar la imagen capturada y escalarla
+    const img = new Image();
+    img.onload = () => {
+      // Dibujar la imagen escalada en el canvas temporal (zoom 2x)
+      tempCtx.drawImage(img, 0, 0, innerRadius * 2, innerRadius * 2);
+
+      // Convertir a data URL y crear imagen de fabric
+      const scaledDataUrl = tempCanvas.toDataURL("image/png");
+
+      fabric.Image.fromURL(
+        scaledDataUrl,
+        (fabricImg) => {
+          if (!fabricImg) return;
+
+          fabricImg.set({
+            left: -innerRadius,
+            top: -innerRadius,
+            originX: "left",
+            originY: "top",
+            selectable: false,
+            evented: false,
+          });
+
+          // Crear un clipPath para el círculo interior
+          const clipPath = new fabric.Circle({
+            radius: innerRadius,
+            originX: "center",
+            originY: "center",
+            left: 0,
+            top: 0,
+          });
+
+          fabricImg.clipPath = clipPath;
+
+          // Crear el grupo con el círculo exterior y la imagen
+          const magnifierGroup = new fabric.Group([outerCircle, fabricImg], {
+            left: centerX,
+            top: centerY,
+            originX: "center",
+            originY: "center",
+            selectable: !isTemp,
+            evented: !isTemp,
+            opacity: isTemp ? 0.7 : 1,
+          });
+
+          if (isTemp) {
+            // Reemplazar el objeto temporal si existe
+            if (magnifierDrawingRef.current.tempMagnifier) {
+              canvas.remove(magnifierDrawingRef.current.tempMagnifier);
+            }
+            magnifierDrawingRef.current.tempMagnifier = magnifierGroup;
+            canvas.add(magnifierGroup);
+            canvas.renderAll();
+          } else {
+            // Agregar el objeto final al canvas
+            canvas.add(magnifierGroup);
+            magnifierGroup.bringToFront();
+            canvas.renderAll();
+
+            // Llamar al callback si existe
+            if (callback) {
+              callback(magnifierGroup);
+            }
+          }
+        },
+        {
+          crossOrigin: "anonymous",
+        }
+      );
+    };
+
+    img.onerror = () => {
+      console.error("Error loading magnifier image");
+    };
+
+    img.src = dataUrl;
+  };
+
+  // Efecto para manejar el modo de dibujo de lupa
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !isMagnifierMode) return;
+
+    const canvas = fabricCanvasRef.current;
+
+    const handleMouseDown = (e: fabric.IEvent) => {
+      if (!canvas || !e.pointer) return;
+
+      magnifierDrawingRef.current.isDrawing = true;
+      magnifierDrawingRef.current.startX = e.pointer.x;
+      magnifierDrawingRef.current.startY = e.pointer.y;
+    };
+
+    const handleMouseMove = (e: fabric.IEvent) => {
+      if (!canvas || !magnifierDrawingRef.current.isDrawing || !e.pointer)
+        return;
+
+      // Eliminar la lupa temporal anterior si existe
+      if (magnifierDrawingRef.current.tempMagnifier) {
+        canvas.remove(magnifierDrawingRef.current.tempMagnifier);
+      }
+
+      const { startX, startY } = magnifierDrawingRef.current;
+      const endX = e.pointer.x;
+      const endY = e.pointer.y;
+
+      // Calcular la distancia desde el punto inicial (esquina) hasta el punto final
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      // El radio es la distancia desde la esquina hasta el punto final
+      const radius = Math.max(30, distance);
+
+      // El centro está en startX + radius, startY + radius (desde la esquina superior izquierda)
+      const centerX = startX + radius;
+      const centerY = startY + radius;
+
+      // Crear una lupa temporal
+      createMagnifier(centerX, centerY, radius, 2, true);
+    };
+
+    const handleMouseUp = (e: fabric.IEvent) => {
+      if (!canvas || !magnifierDrawingRef.current.isDrawing || !e.pointer)
+        return;
+
+      const { startX, startY } = magnifierDrawingRef.current;
+      const endX = e.pointer.x;
+      const endY = e.pointer.y;
+
+      // Calcular la distancia desde el punto inicial (esquina) hasta el punto final
+      const deltaX = endX - startX;
+      const deltaY = endY - startY;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      // El radio es la distancia desde la esquina hasta el punto final
+      const radius = Math.max(30, distance);
+
+      // El centro está en startX + radius, startY + radius (desde la esquina superior izquierda)
+      const centerX = startX + radius;
+      const centerY = startY + radius;
+
+      // Eliminar la lupa temporal
+      if (magnifierDrawingRef.current.tempMagnifier) {
+        canvas.remove(magnifierDrawingRef.current.tempMagnifier);
+        magnifierDrawingRef.current.tempMagnifier = null;
+      }
+
+      // Solo crear la lupa si tiene un tamaño mínimo
+      if (radius > 30) {
+        // Crear la lupa final
+        createMagnifier(centerX, centerY, radius, 2, false);
+        // El debounce en object:added se encargará de guardar
+      }
+
+      // Desactivar flag de modo dibujo DESPUÉS de crear el elemento final
+      isDrawingModeRef.current = false;
+
+      // Resetear el estado de dibujo
+      magnifierDrawingRef.current.isDrawing = false;
+
+      // Desactivar el modo de lupa y restaurar la funcionalidad normal
+      setIsMagnifierMode(false);
+      canvas.selection = true;
+      canvas.forEachObject((obj) => {
+        obj.selectable = true;
+      });
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+    };
+
+    // Manejar tecla Escape para cancelar el modo de dibujo
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // Eliminar la lupa temporal si existe
+        if (magnifierDrawingRef.current.tempMagnifier) {
+          canvas.remove(magnifierDrawingRef.current.tempMagnifier);
+          magnifierDrawingRef.current.tempMagnifier = null;
+        }
+
+        // Resetear el estado
+        magnifierDrawingRef.current.isDrawing = false;
+        isDrawingModeRef.current = false; // Desactivar flag
+        setIsMagnifierMode(false);
+        canvas.selection = true;
+        canvas.forEachObject((obj) => {
+          obj.selectable = true;
+        });
+        canvas.defaultCursor = "default";
+        canvas.hoverCursor = "move";
+        canvas.renderAll();
+      }
+    };
+
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isMagnifierMode]);
+
   // Efecto para manejar el modo de texto inline
   useEffect(() => {
     if (!fabricCanvasRef.current) return;
@@ -941,6 +1236,10 @@ export const useCanvas = () => {
           case "b":
             e.preventDefault();
             addBlurBox();
+            break;
+          case "m":
+            e.preventDefault();
+            addMagnifier();
             break;
           case "n":
             e.preventDefault();
@@ -1298,6 +1597,36 @@ export const useCanvas = () => {
 
     // Activar el modo de dibujo de blur
     setIsBlurMode(true);
+    const canvas = fabricCanvasRef.current;
+
+    // Desactivar la selección de objetos mientras se dibuja
+    canvas.selection = false;
+    canvas.forEachObject((obj) => {
+      obj.selectable = false;
+    });
+
+    // Cambiar el cursor para indicar el modo de dibujo
+    canvas.defaultCursor = "crosshair";
+    canvas.hoverCursor = "crosshair";
+  };
+
+  const addMagnifier = () => {
+    if (!fabricCanvasRef.current) return;
+
+    lastActionRef.current = "magnifier"; // Trackear tipo de acción
+    isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
+
+    // Desactivar modo texto si está activo
+    if (isTextMode) {
+      setIsTextMode(false);
+      const canvas = fabricCanvasRef.current;
+      canvas.defaultCursor = "default";
+      canvas.hoverCursor = "move";
+      canvas.selection = true;
+    }
+
+    // Activar el modo de dibujo de lupa
+    setIsMagnifierMode(true);
     const canvas = fabricCanvasRef.current;
 
     // Desactivar la selección de objetos mientras se dibuja
@@ -2212,6 +2541,7 @@ export const useCanvas = () => {
     addRectangle,
     addCircle,
     addBlurBox,
+    addMagnifier,
     addNumberedAnnotation,
     resetAnnotationCounter,
     annotationCounter,

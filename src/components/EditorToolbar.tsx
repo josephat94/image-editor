@@ -24,6 +24,7 @@ import {
   Hash,
   ChevronsUp,
   ChevronsDown,
+  ZoomIn,
 } from "lucide-react";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useUIStore } from "@/stores/uiStore";
@@ -70,6 +71,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     addRectangle,
     addCircle,
     addBlurBox,
+    addMagnifier,
     addNumberedAnnotation,
     downloadImage,
     copyToClipboard,
@@ -203,6 +205,12 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <TooltipButton content="Censurar (B)">
             <Button onClick={addBlurBox} variant="outline" size="icon">
               <Eye className="w-4 h-4" />
+            </Button>
+          </TooltipButton>
+
+          <TooltipButton content="Lupa (M) - Click y arrastra para crear">
+            <Button onClick={addMagnifier} variant="outline" size="icon">
+              <ZoomIn className="w-4 h-4" />
             </Button>
           </TooltipButton>
 
