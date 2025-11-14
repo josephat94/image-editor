@@ -15,6 +15,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useUIStore } from "@/stores/uiStore";
 import { TOUR_STEPS } from "@/constants/tourSteps";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { cn } from "@/lib/utils";
 import type { DriveStep } from "driver.js";
 
@@ -22,6 +23,7 @@ const ImageEditorContent: React.FC = () => {
   const { isReady, addImage, removeImageBackground } = useCanvasContext();
   const { open } = useSidebar();
   const isMobile = useIsMobile();
+  const isLaptop = useIsLaptop();
   const {
     isHistoryPanelOpen,
     setHistoryPanelOpen,
@@ -148,7 +150,7 @@ const ImageEditorContent: React.FC = () => {
         <EditorSidebar />
 
         {/* Área principal con canvas */}
-        <SidebarInset className="flex-1">
+        <SidebarInset className="flex-1 z-[1]">
           <div
             className={cn(
               "flex flex-col h-screen relative",
@@ -161,8 +163,16 @@ const ImageEditorContent: React.FC = () => {
             {/* Contenido principal */}
             <div
               className={cn(
-                "flex-1 p-3 md:p-6 bg-gray-900 overflow-y-auto overflow-x-hidden transition-all duration-300",
-                !isMobile && isHistoryPanelOpen ? "pr-[22rem]" : "pr-3 md:pr-6",
+                "flex-1 bg-gray-900 overflow-y-auto overflow-x-hidden transition-all duration-300",
+                // Padding responsive: mobile p-3, laptop p-5, desktop p-6
+                isMobile ? "p-3" : isLaptop ? "p-5" : "p-6",
+                !isMobile && isHistoryPanelOpen
+                  ? "pr-[22rem]"
+                  : isMobile
+                  ? "pr-3"
+                  : isLaptop
+                  ? "pr-5"
+                  : "pr-6",
                 "pb-24 md:pb-6" // Espacio para toolbar mobile
               )}
             >

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useUIStore } from "@/stores/uiStore";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { cn } from "@/lib/utils";
 
 interface EditorHeaderProps {
@@ -21,13 +22,26 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
 }) => {
   const isHistoryPanelOpen = useUIStore((state) => state.isHistoryPanelOpen);
   const isMobile = useIsMobile();
+  const isLaptop = useIsLaptop();
 
   return (
     <header
       id="editor-header"
       className={cn(
-        "flex h-14 md:h-16 shrink-0 items-center gap-2 md:gap-4 border-b border-gray-700 px-3 md:px-6 bg-gray-800 transition-all duration-300",
-        !isMobile && isHistoryPanelOpen ? "pr-[22rem]" : "pr-4"
+        "flex shrink-0 items-center border-b border-gray-700 bg-gray-800 transition-all duration-300",
+        // Height: mobile h-14, laptop h-[60px], desktop h-16
+        isMobile ? "h-14" : isLaptop ? "h-[60px]" : "h-16",
+        // Gap: mobile gap-2, laptop gap-3, desktop gap-4
+        isMobile ? "gap-2" : isLaptop ? "gap-3" : "gap-4",
+        // Padding horizontal: mobile px-3, laptop px-5, desktop px-6
+        isMobile ? "px-3" : isLaptop ? "px-5" : "px-6",
+        !isMobile && isHistoryPanelOpen
+          ? "pr-[22rem]"
+          : isMobile
+          ? "pr-3"
+          : isLaptop
+          ? "pr-5"
+          : "pr-6"
       )}
     >
       <SidebarTrigger className="text-white h-10 w-10 md:h-10 md:w-10" />

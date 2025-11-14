@@ -28,7 +28,9 @@ import {
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useUIStore } from "@/stores/uiStore";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { ToolbarMobile } from "@/components/ToolbarMobile";
+import { cn } from "@/lib/utils";
 
 // Component Helper for Tooltip
 const TooltipButton = ({
@@ -76,6 +78,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   const { copied, setCopied, isRemovingBg } = useUIStore();
   const { toggleTextMode, isTextMode } = useCanvasContext();
+  const isLaptop = useIsLaptop();
 
   // En mobile, mostrar el toolbar mobile
   if (isMobile) {
@@ -96,8 +99,18 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   };
 
   return (
-    <div className="sticky top-0 z-10 bg-gray-700 rounded-lg p-4 shadow-inner md:top-4">
-      <div className="flex flex-wrap gap-3 justify-center items-center">
+    <div
+      className={cn(
+        "sticky top-0 z-10 bg-gray-700 rounded-lg shadow-inner md:top-4",
+        isLaptop ? "p-5" : "p-4"
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-wrap justify-center items-center",
+          isLaptop ? "gap-3.5" : "gap-3"
+        )}
+      >
         {/* Sección: Archivo */}
         <div id="file-upload-section" className="flex gap-2 items-center">
           <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
