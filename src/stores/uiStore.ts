@@ -20,6 +20,12 @@ interface UIState {
   setIsRemovingBg: (removing: boolean) => void;
   bgRemovalError: string | null;
   setBgRemovalError: (error: string | null) => void;
+
+  // Autosave state
+  lastSaved: Date | null;
+  setLastSaved: (date: Date | null) => void;
+  isAutoSaving: boolean;
+  setIsAutoSaving: (isSaving: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -42,4 +48,10 @@ export const useUIStore = create<UIState>((set) => ({
   setIsRemovingBg: (removing) => set({ isRemovingBg: removing }),
   bgRemovalError: null,
   setBgRemovalError: (error) => set({ bgRemovalError: error }),
+
+  // Autosave state
+  lastSaved: null,
+  setLastSaved: (date) => set({ lastSaved: date }),
+  isAutoSaving: false,
+  setIsAutoSaving: (isSaving) => set({ isAutoSaving: isSaving }),
 }));

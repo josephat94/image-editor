@@ -4,9 +4,13 @@ import { removeBackground } from "@imgly/background-removal";
 import type { Config } from "@imgly/background-removal";
 import { Vibrant } from "node-vibrant/browser";
 import { useEditorStore } from "@/stores/editorStore";
+import { useUIStore } from "@/stores/uiStore";
+
+const AUTOSAVE_KEY = "quicksnap-autosave";
 
 export const useCanvas = () => {
   const { setImagePalette, setCanvasBackground } = useEditorStore();
+  const { setLastSaved, setIsAutoSaving } = useUIStore();
 
   // Necesitamos una referencia a setBackgroundColor que se define más abajo
   // Por ahora, lo manejaremos de otra forma
@@ -61,6 +65,7 @@ export const useCanvas = () => {
   const lastActionRef = useRef<string>("initial"); // Para rastrear la última acción
   const modifyTimeoutRef = useRef<number | null>(null); // Para debounce de modificaciones
   const addTimeoutRef = useRef<number | null>(null); // Para debounce de creación
+  const saveTimeoutRef = useRef<number | null>(null); // Para debounce de guardado local
   const isModifyingRef = useRef<boolean>(false); // Flag para saber si está modificando
   const isDrawingModeRef = useRef<boolean>(false); // Flag para ignorar elementos temporales en object:removed
 
@@ -177,6 +182,94 @@ export const useCanvas = () => {
     }, 100);
   };
 
+  // Función para guardar en localStorage
+  const saveToLocalStorage = () => {
+    if (!fabricCanvasRef.current) return;
+
+    // Cancelar timeout anterior si existe
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    setIsAutoSaving(true);
+
+    // Debounce de 2 segundos para no saturar el localStorage
+    saveTimeoutRef.current = window.setTimeout(() => {
+      if (!fabricCanvasRef.current) return;
+
+      try {
+        const canvas = fabricCanvasRef.current;
+        const json = canvas.toJSON();
+
+        // Guardar también las dimensiones y el fondo
+        const saveData = {
+          canvas: json,
+          width: canvas.width,
+          height: canvas.height,
+          backgroundColor: canvas.backgroundColor,
+          timestamp: Date.now(),
+        };
+
+        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(saveData));
+        setLastSaved(new Date());
+        setIsAutoSaving(false);
+      } catch (error) {
+        console.error("Error al guardar en localStorage:", error);
+        setIsAutoSaving(false);
+      }
+    }, 2000);
+  };
+
+  // Función para cargar desde localStorage
+  const loadFromLocalStorage = () => {
+    if (!fabricCanvasRef.current) return false;
+
+    try {
+      const savedData = localStorage.getItem(AUTOSAVE_KEY);
+      if (!savedData) return false;
+
+      const parsedData = JSON.parse(savedData);
+      const canvas = fabricCanvasRef.current;
+
+      // Verificar si hay datos válidos (al menos un objeto o fondo cambiado)
+      if (
+        !parsedData.canvas ||
+        (!parsedData.canvas.objects?.length &&
+          parsedData.canvas.background === "#ffffff")
+      ) {
+        return false;
+      }
+
+      // Restaurar dimensiones
+      if (parsedData.width && parsedData.height) {
+        canvas.setDimensions({
+          width: parsedData.width,
+          height: parsedData.height,
+        });
+      }
+
+      // Restaurar color de fondo
+      if (parsedData.backgroundColor) {
+        canvas.backgroundColor = parsedData.backgroundColor;
+        setCanvasBackground(parsedData.backgroundColor);
+      }
+
+      // Cargar objetos
+      canvas.loadFromJSON(parsedData.canvas, () => {
+        canvas.renderAll();
+
+        // Inicializar historial con el estado cargado
+        saveCanvasState("initial", "Restaurado de autoguardado");
+        setLastSaved(new Date(parsedData.timestamp));
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error al cargar desde localStorage:", error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -191,11 +284,17 @@ export const useCanvas = () => {
     fabricCanvasRef.current = canvas;
     setIsReady(true);
 
-    // Ajustar el canvas inicialmente para que quepa en la pantalla
-    adjustCanvasToFit(true);
+    // Intentar cargar desde localStorage primero
+    const restored = loadFromLocalStorage();
 
-    // Guardar estado inicial
-    saveCanvasState();
+    if (!restored) {
+      // Si no hay datos guardados, ajustar el canvas inicialmente y guardar estado inicial
+      adjustCanvasToFit(true);
+      saveCanvasState();
+    } else {
+      // Si se restauró, solo ajustar zoom/viewport
+      adjustCanvasToFit(true);
+    }
 
     // Listeners para detectar cambios en el canvas
     canvas.on("object:added", () => {
@@ -2342,6 +2441,9 @@ export const useCanvas = () => {
     historyStepRef.current = historyRef.current.length - 1;
     lastActionRef.current = actionType;
     setHistoryVersion((v) => v + 1);
+
+    // Disparar autoguardado
+    saveToLocalStorage();
   };
 
   const undo = () => {

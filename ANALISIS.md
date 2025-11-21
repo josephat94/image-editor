@@ -80,20 +80,20 @@
 - ✅ **Auto-Expand**: El canvas crece si la nueva imagen no cabe
 - ✅ Experiencia fluida al pegar múltiples screenshots
 
+### 8. Persistencia Automática (Nuevo)
+
+- ✅ **Auto-guardado Inteligente**: Guarda cada 2 segundos tras cambios (debounce)
+- ✅ **Recuperación Automática**: Restaura tu trabajo si cierras el navegador
+- ✅ **Indicador Visual**: Feedback en tiempo real ("Guardando...", "Guardado hace...")
+- ✅ **Seguridad**: Nunca pierdes tu progreso por accidente
+
 ---
 
 ## ❌ Lo que Falta para el Caso de Uso
 
 ### 🔴 Crítico (Implementar Pronto)
 
-#### 1. Auto-guardado Local
-
-- **Problema**: Si cierras el navegador, pierdes todo
-- **Solución**: localStorage automático cada 5 segundos
-- **Impacto**: CRÍTICO para el flujo de trabajo
-- **Prioridad**: ALTA
-
-#### 2. Atajo para Descargar
+#### 1. Atajo para Descargar (Cmd+S)
 
 - **Problema**: Tener que hacer clic en descargar cada vez
 - **Solución**: Cmd+S para descargar directamente
@@ -152,7 +152,7 @@
    - Recuperar al recargar la página
    - Indicador visual de "guardado"
 
-2. ✅ **Atajo para descargar**
+2. **Atajo para descargar (Cmd+S)**
    - Cmd+S para descargar directamente
    - O auto-descargar al copiar al portapapeles
 
@@ -237,7 +237,7 @@
 | **✅ Redimensionar Canvas**     | -          | -           | -        | ✅ Completado |
 | **✅ Toolbar en Header**        | -          | -           | -        | ✅ Completado |
 | **✅ Layout Automático**        | -          | -           | -        | ✅ Completado |
-| Auto-guardado Local             | ALTA       | BAJA        | 1 día    | 📝 Pendiente  |
+| **✅ Auto-guardado Local**      | -          | -           | -        | ✅ Completado |
 | Atajo Descargar (Cmd+S)         | MEDIA      | BAJA        | 1 hora   | 📝 Pendiente  |
 | Proyectos Guardados             | MEDIA-ALTA | MEDIA       | 2-3 días | 📝 Pendiente  |
 | UX Múltiples Imágenes           | MEDIA      | MEDIA       | 2-3 días | 📝 Pendiente  |
@@ -255,4 +255,5 @@
 - ✅ Código refactorizado y limpio
 - ✅ Interfaz optimizada al máximo (espacio, usabilidad)
 - ✅ UX de múltiples imágenes resuelta (Smart Placement)
-- 🚀 Listo para implementar persistencia (auto-guardado)
+- ✅ Persistencia robusta implementada (Auto-save)
+- 🚀 Listo para implementar atajos avanzados y gestión de proyectos
