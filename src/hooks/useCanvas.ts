@@ -22,7 +22,7 @@ export const useCanvas = () => {
   const [isTextMode, setIsTextMode] = useState(false);
   const [isMagnifierMode, setIsMagnifierMode] = useState(false);
   const [showResizeHandles, setShowResizeHandles] = useState(false);
-  const [isManualResizing, setIsManualResizing] = useState(false); // Flag para redimensionamiento manual
+  const isManualResizingRef = useRef(false); // Flag para redimensionamiento manual (usando ref para evitar re-renders)
   const [annotationCounter, setAnnotationCounter] = useState(1);
   const [layersVersion, setLayersVersion] = useState(0); // Para forzar re-render de la lista de capas
   const [historyVersion, setHistoryVersion] = useState(0); // Para forzar re-render del historial
@@ -193,16 +193,6 @@ export const useCanvas = () => {
 
     // Ajustar el canvas inicialmente para que quepa en la pantalla
     adjustCanvasToFit(true);
-
-    // Ajustar el canvas cuando se redimensiona la ventana (solo si el zoom es 1)
-    const handleResize = () => {
-      // Solo ajustar automáticamente si el usuario no ha hecho zoom manual
-      const currentZoom = canvas.getZoom();
-      if (currentZoom === 1) {
-        adjustCanvasToFit(false);
-      }
-    };
-    window.addEventListener("resize", handleResize);
 
     // Guardar estado inicial
     saveCanvasState();
@@ -2785,8 +2775,10 @@ export const useCanvas = () => {
     isTextMode,
     showResizeHandles,
     setShowResizeHandles,
-    isManualResizing,
-    setIsManualResizing,
+    isManualResizing: () => isManualResizingRef.current, // Función getter que siempre devuelve el valor actual
+    setIsManualResizing: (value: boolean) => {
+      isManualResizingRef.current = value;
+    },
     resizeCanvas,
     currentFont,
     setCurrentFont,

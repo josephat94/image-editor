@@ -27,7 +27,7 @@ interface CanvasContextType {
   isTextMode: boolean;
   showResizeHandles: boolean;
   setShowResizeHandles: (show: boolean) => void;
-  isManualResizing: boolean;
+  isManualResizing: () => boolean; // Función getter que devuelve el valor actual del ref
   setIsManualResizing: (isResizing: boolean) => void;
   resizeCanvas: (
     width: number,

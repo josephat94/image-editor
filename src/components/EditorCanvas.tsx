@@ -96,7 +96,7 @@ export const EditorCanvas: React.FC = () => {
 
   // Función para redimensionar el canvas
   const handleCanvasResize = useCallback(() => {
-    if (!fabricCanvas || !isReady || isManualResizing) return; // No redimensionar si se está haciendo manualmente
+    if (!fabricCanvas || !isReady || isManualResizing()) return; // No redimensionar si se está haciendo manualmente
 
     const maxSize = calculateMaxCanvasSize();
     if (maxSize) {
@@ -116,7 +116,7 @@ export const EditorCanvas: React.FC = () => {
 
     const handleWindowResize = () => {
       // Cancelar cualquier resize automático pendiente si se está haciendo resize manual
-      if (isManualResizing) {
+      if (isManualResizing()) {
         if (resizeTimeoutRef.current) {
           clearTimeout(resizeTimeoutRef.current);
           resizeTimeoutRef.current = null;
@@ -131,7 +131,7 @@ export const EditorCanvas: React.FC = () => {
 
       resizeTimeoutRef.current = window.setTimeout(() => {
         // Verificar nuevamente antes de ejecutar
-        if (!isManualResizing) {
+        if (!isManualResizing()) {
           handleCanvasResize();
         }
       }, 150);
@@ -146,12 +146,12 @@ export const EditorCanvas: React.FC = () => {
         clearTimeout(resizeTimeoutRef.current);
       }
     };
-  }, [fabricCanvas, isReady, isManualResizing, handleCanvasResize]);
+  }, [fabricCanvas, isReady, handleCanvasResize]);
 
   // Efecto separado para redimensionar cuando cambian las dependencias (sidebar, history panel, etc.)
   // pero solo si no se está haciendo resize manual
   useEffect(() => {
-    if (!fabricCanvas || !isReady || isManualResizing) return;
+    if (!fabricCanvas || !isReady || isManualResizing()) return;
 
     // Cancelar cualquier resize automático pendiente
     if (resizeTimeoutRef.current) {
@@ -160,7 +160,7 @@ export const EditorCanvas: React.FC = () => {
 
     resizeTimeoutRef.current = window.setTimeout(() => {
       // Verificar nuevamente antes de ejecutar
-      if (!isManualResizing) {
+      if (!isManualResizing()) {
         handleCanvasResize();
       }
     }, 150);
@@ -170,7 +170,15 @@ export const EditorCanvas: React.FC = () => {
         clearTimeout(resizeTimeoutRef.current);
       }
     };
-  }, [sidebarOpen, isHistoryPanelOpen, isMobile, isLaptop, fabricCanvas, isReady, isManualResizing, handleCanvasResize]);
+  }, [
+    sidebarOpen,
+    isHistoryPanelOpen,
+    isMobile,
+    isLaptop,
+    fabricCanvas,
+    isReady,
+    handleCanvasResize,
+  ]);
 
   return (
     <div
