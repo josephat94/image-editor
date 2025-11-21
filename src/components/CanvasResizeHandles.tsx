@@ -133,8 +133,20 @@ export const CanvasResizeHandles: React.FC = () => {
       }
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      // Asegurar que el flag se desactive si el componente se desmonta durante el arrastre
+      if (isDragging) {
+        setIsManualResizing(false);
+      }
     };
-  }, [isDragging, dragHandle, startPos, startSize, resizeCanvas, fabricCanvas]);
+  }, [
+    isDragging,
+    dragHandle,
+    startPos,
+    startSize,
+    resizeCanvas,
+    fabricCanvas,
+    setIsManualResizing,
+  ]);
 
   // Cerrar handles al hacer click fuera
   useEffect(() => {

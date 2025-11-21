@@ -10,8 +10,14 @@ import { cn } from "@/lib/utils";
 import { CanvasResizeHandles } from "@/components/CanvasResizeHandles";
 
 export const EditorCanvas: React.FC = () => {
-  const { canvasRef, isReady, getLayersList, fabricCanvas, resizeCanvas, isManualResizing } =
-    useCanvasContext();
+  const {
+    canvasRef,
+    isReady,
+    getLayersList,
+    fabricCanvas,
+    resizeCanvas,
+    isManualResizing,
+  } = useCanvasContext();
   const { imagePalette } = useEditorStore();
   const isLaptop = useIsLaptop();
   const isMobile = useIsMobile();
@@ -96,36 +102,75 @@ export const EditorCanvas: React.FC = () => {
     if (maxSize) {
       resizeCanvas(maxSize.width, maxSize.height, true);
     }
-  }, [fabricCanvas, isReady, isManualResizing, calculateMaxCanvasSize, resizeCanvas]);
+  }, [
+    fabricCanvas,
+    isReady,
+    isManualResizing,
+    calculateMaxCanvasSize,
+    resizeCanvas,
+  ]);
 
-  // Efecto para redimensionar el canvas cuando cambia el tamaño de la ventana o las dependencias
+  // Efecto para redimensionar el canvas cuando cambia el tamaño de la ventana
   useEffect(() => {
     if (!fabricCanvas || !isReady) return;
 
-    const handleResize = () => {
+    const handleWindowResize = () => {
+      // Cancelar cualquier resize automático pendiente si se está haciendo resize manual
+      if (isManualResizing) {
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current);
+          resizeTimeoutRef.current = null;
+        }
+        return;
+      }
+
       // Debounce para evitar demasiadas llamadas durante el resize
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
       }
 
       resizeTimeoutRef.current = window.setTimeout(() => {
-        handleCanvasResize();
+        // Verificar nuevamente antes de ejecutar
+        if (!isManualResizing) {
+          handleCanvasResize();
+        }
       }, 150);
     };
 
     // Escuchar cambios en el tamaño de la ventana
-    window.addEventListener("resize", handleResize);
-
-    // Redimensionar inicialmente y cuando cambien las dependencias
-    handleResize();
+    window.addEventListener("resize", handleWindowResize);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", handleWindowResize);
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
       }
     };
-  }, [fabricCanvas, isReady, handleCanvasResize]);
+  }, [fabricCanvas, isReady, isManualResizing, handleCanvasResize]);
+
+  // Efecto separado para redimensionar cuando cambian las dependencias (sidebar, history panel, etc.)
+  // pero solo si no se está haciendo resize manual
+  useEffect(() => {
+    if (!fabricCanvas || !isReady || isManualResizing) return;
+
+    // Cancelar cualquier resize automático pendiente
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+
+    resizeTimeoutRef.current = window.setTimeout(() => {
+      // Verificar nuevamente antes de ejecutar
+      if (!isManualResizing) {
+        handleCanvasResize();
+      }
+    }, 150);
+
+    return () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, [sidebarOpen, isHistoryPanelOpen, isMobile, isLaptop, fabricCanvas, isReady, isManualResizing, handleCanvasResize]);
 
   return (
     <div
