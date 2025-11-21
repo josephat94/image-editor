@@ -1483,9 +1483,47 @@ export const useCanvas = () => {
       const scale = Math.min(scaleX, scaleY, 1);
 
       img.scale(scale);
+
+      // Calcular posición inteligente para múltiples imágenes
+      let left = (canvas.width! - img.width! * scale) / 2;
+      let top = (canvas.height! - img.height! * scale) / 2;
+
+      const existingImages = canvas.getObjects("image");
+      
+      if (existingImages.length > 0) {
+        const lastImg = existingImages[existingImages.length - 1];
+        const gap = 20;
+        
+        // Calcular dimensiones reales de la última imagen
+        const lastImgWidth = lastImg.width! * lastImg.scaleX!;
+        const lastImgRight = lastImg.left! + lastImgWidth;
+        
+        // Calcular dimensiones de la nueva imagen
+        const newImgWidth = img.width! * scale;
+        
+        // Verificar si cabe a la derecha
+        if (lastImgRight + newImgWidth + gap < canvas.width!) {
+          left = lastImgRight + gap;
+          top = lastImg.top!; // Mantener alineación superior
+        } else {
+          // No cabe a la derecha, ir a nueva fila
+          // Encontrar la posición Y más baja de todas las imágenes existentes para evitar superposición
+          const maxBottom = existingImages.reduce((max, obj) => {
+            const bottom = obj.top! + (obj.height! * obj.scaleY!);
+            return Math.max(max, bottom);
+          }, 0);
+          
+          left = 20; // Margen izquierdo inicial
+          top = maxBottom + gap;
+        }
+        
+        // Ajustar si se sale del canvas verticalmente (opcional: expandir canvas)
+        // Por ahora dejaremos que se salga visualmente si es necesario, el usuario puede hacer resize
+      }
+
       img.set({
-        left: (canvas.width! - img.width! * scale) / 2,
-        top: (canvas.height! - img.height! * scale) / 2,
+        left,
+        top,
         selectable: true,
         evented: true,
       });
