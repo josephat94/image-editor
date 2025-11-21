@@ -66,6 +66,20 @@
 - ✅ Tour guiado para nuevos usuarios
 - ✅ Sistema de capas completo
 
+### 6. UI/UX Optimizada (Nueva)
+
+- ✅ Toolbar integrado en el header para maximizar espacio
+- ✅ Redimensionamiento automático del canvas (responsive)
+- ✅ Redimensionamiento manual sin conflictos
+- ✅ Diseño limpio y consistente (estilo outlined)
+
+### 7. Layout Inteligente de Imágenes (Nuevo)
+
+- ✅ **Smart Placement**: Las imágenes no se superponen al pegarlas
+- ✅ **Best Fit**: Busca huecos disponibles automáticamente
+- ✅ **Auto-Expand**: El canvas crece si la nueva imagen no cabe
+- ✅ Experiencia fluida al pegar múltiples screenshots
+
 ---
 
 ## ❌ Lo que Falta para el Caso de Uso
@@ -79,14 +93,7 @@
 - **Impacto**: CRÍTICO para el flujo de trabajo
 - **Prioridad**: ALTA
 
-#### 2. Layout Automático para Múltiples Imágenes
-
-- **Problema**: Las imágenes se centran y se superponen
-- **Solución**: Modo grid o apilar verticalmente automáticamente
-- **Impacto**: ALTO - mejora mucho la experiencia
-- **Prioridad**: ALTA
-
-#### 3. Atajo para Descargar
+#### 2. Atajo para Descargar
 
 - **Problema**: Tener que hacer clic en descargar cada vez
 - **Solución**: Cmd+S para descargar directamente
@@ -95,14 +102,14 @@
 
 ### 🟡 Importante (Próximas 2 Semanas)
 
-#### 4. Proyectos Guardados
+#### 3. Proyectos Guardados
 
 - **Problema**: No puedes tener varias evidencias abiertas
 - **Solución**: Guardar proyectos con nombre (ej: "Feature-X", "Bug-123")
 - **Impacto**: ALTO - permite trabajar en múltiples tareas
 - **Prioridad**: MEDIA-ALTA
 
-#### 5. Mejoras de UX para Múltiples Imágenes
+#### 4. Mejoras de UX para Múltiples Imágenes
 
 - **Problema**: Difícil seleccionar imagen específica cuando hay muchas
 - **Solución**:
@@ -114,23 +121,24 @@
 
 ### 🟢 Nice to Have (Largo Plazo)
 
-#### 6. Integración con Herramientas Dev
+#### 5. Integración con Herramientas Dev
 
 - Botón "Copiar para Jira/GitHub"
 - Formato optimizado para issues
 - Watermark opcional con info del proyecto
 - **Prioridad**: BAJA
 
-#### 7. Extensión de Navegador
+#### 6. Extensión de Navegador
 
 - Capturar screenshot directamente
 - Abrir QuickSnap con imagen ya cargada
 - **Prioridad**: BAJA
 
-#### 8. Plantillas de Anotación
+#### 7. PWA (Progressive Web App)
 
-- Guardar "estilos" de anotación (ej: "Bug report", "Feature demo")
-- **Prioridad**: BAJA
+- Instalar como aplicación de escritorio
+- Funcionar offline
+- **Prioridad**: MEDIA
 
 ---
 
@@ -144,138 +152,28 @@
    - Recuperar al recargar la página
    - Indicador visual de "guardado"
 
-2. ✅ **Layout automático para múltiples imágenes**
-
-   - Al pegar segunda imagen, apilar verticalmente o en grid
-   - Opción de "modo apilar" vs "modo libre"
-
-3. ✅ **Atajo para descargar**
+2. ✅ **Atajo para descargar**
    - Cmd+S para descargar directamente
    - O auto-descargar al copiar al portapapeles
 
 ### Mediano Plazo (Próximas 2 Semanas)
 
-4. ✅ **Proyectos guardados**
+3. ✅ **Proyectos guardados**
 
    - Lista de proyectos guardados
    - Nombre editable
    - Cargar proyecto guardado
 
-5. ✅ **Mejoras de UX para múltiples imágenes**
+4. ✅ **Mejoras de UX para múltiples imágenes**
    - Miniaturas en sidebar
    - Seleccionar imagen específica fácilmente
    - Reordenar imágenes arrastrando
 
 ### Largo Plazo (1 Mes)
 
-6. ✅ **Integración con herramientas dev**
-
-   - Botón "Copiar para Jira/GitHub"
-   - Formato optimizado para issues
-   - Watermark opcional con info del proyecto
-
-7. ✅ **Extensión de navegador**
-   - Capturar screenshot directamente
-   - Abrir QuickSnap con imagen ya cargada
-
----
-
-## 🌐 ¿Vale la Pena un Dominio?
-
-### ✅ SÍ, definitivamente vale la pena
-
-**Razones:**
-
-1. **Nicho específico**: Desarrolladores que documentan trabajo
-2. **Problema real**: Apps lentas o que no permiten múltiples imágenes
-3. **Diferenciación clara**: Velocidad + múltiples imágenes sin guardar
-4. **Potencial viral**: Si resuelve el problema, otros devs lo compartirán
-
-### Dominios Sugeridos:
-
-- `quicksnap.dev` ⭐ (recomendado)
-- `snapnote.dev`
-- `devsnap.io`
-- `screenshot.dev`
-- `quicksnap.io`
-
-### Estrategia de Lanzamiento:
-
-1. Implementar auto-guardado y layout automático
-2. Probar con 5-10 desarrolladores
-3. Obtener feedback
-4. Lanzar con dominio propio
-5. Compartir en comunidades dev (Reddit, Twitter, HackerNews)
-
----
-
-## 📈 Veredicto Final
-
-### Viabilidad: ⭐⭐⭐⭐⭐ (Muy Alta)
-
-- Ya resuelve el problema principal
-- Funciona bien técnicamente
-- Código bien estructurado
-
-### Utilidad: ⭐⭐⭐⭐⭐ (Muy Alta)
-
-- Para el caso de uso específico es perfecto
-- Resuelve un problema real
-- Más rápido que alternativas
-
-### Potencial: ⭐⭐⭐⭐ (Alto)
-
-- Si otros devs tienen el mismo problema, lo usarán
-- Fácil de compartir (solo un link)
-- No requiere instalación
-
-### Dominio: ⭐⭐⭐⭐ (Sí, vale la pena)
-
-- Especialmente `.dev` o `.io`
-- Profesional
-- Fácil de recordar
-
----
-
-## 🚀 Estado Actual
-
-**QuickSnap ya resuelve tu problema principal** (múltiples imágenes sin guardar).
-
-Con **auto-guardado** y **layout automático**, sería una herramienta perfecta para desarrolladores.
-
-**Próximos pasos sugeridos:**
-
-1. Implementar auto-guardado
-2. Implementar layout automático
-3. Probar con usuarios reales
-4. Lanzar con dominio propio
-
----
-
-## 📝 Notas Adicionales
-
-### Tecnologías Actuales:
-
-- React 19 + TypeScript
-- Fabric.js para canvas
-- Tailwind CSS + shadcn/ui
-- @imgly/background-removal (IA local)
-- node-vibrant (extracción de colores)
-
-### Características Únicas:
-
-- Extracción automática de paleta de colores
-- Remover fondo con IA (100% gratis, local)
-- Tour guiado automático
-- Historial visual completo
-
-### Ventajas Competitivas:
-
-- ✅ Más rápido que alternativas
-- ✅ Múltiples imágenes sin guardar
-- ✅ 100% en navegador (sin instalación)
-- ✅ Remover fondo gratis (sin API keys)
-- ✅ Atajos de teclado bien implementados
+5. ✅ **PWA / Instalable**
+   - Configurar manifest y service worker
+   - Permitir uso offline real
 
 ---
 
@@ -289,176 +187,64 @@ Con **auto-guardado** y **layout automático**, sería una herramienta perfecta 
 - ✅ Implementación de Zustand para estado global
 - ✅ Context API para compartir instancia del canvas
 - ✅ Hooks personalizados (useKeyboardShortcuts, usePasteImage)
-- ✅ Organización de constantes y tipos
-- ✅ Reducción de ImageEditor de 1245 a 193 líneas
 - **Estado**: ✅ Completado
-- **Fecha**: Enero 2025
 
 #### 2. Vista Mobile Completa
 
 - ✅ Toolbar mobile inferior fijo con botones principales
 - ✅ Menú "Más" con todas las herramientas organizadas
 - ✅ Panel de historial como bottom sheet en mobile
-- ✅ Canvas optimizado para mobile (ancho completo)
-- ✅ Header compacto para mobile
-- ✅ Botones táctiles grandes (48x48px)
-- ✅ Toolbar sticky en desktop
 - **Estado**: ✅ Completado
-- **Fecha**: Enero 2025
 
 #### 3. Editor de Texto Inline
 
-- ✅ Cambio de `fabric.Text` a `fabric.IText` para edición inline
-- ✅ Modo texto activo con atajo de teclado `T`
-- ✅ Click en canvas crea texto en esa posición (modo texto activo)
-- ✅ Doble click en texto existente para edición inline
 - ✅ Edición directa sobre el canvas (similar a Figma/Canva)
-- ✅ Placeholder "Escribe aquí..." que se reemplaza al escribir
-- ✅ Cursor cambia a "text" cuando modo está activo
-- ✅ Feedback visual claro del estado del modo texto
-- ✅ Integración completa con toolbar desktop y mobile
+- ✅ Placeholder "Escribe aquí..."
 - **Estado**: ✅ Completado
-- **Fecha**: Enero 2025
 
-#### 4. Redimensionamiento de Canvas con Drag and Drop
+#### 4. Redimensionamiento Inteligente
 
-- ✅ Click en área vacía del canvas muestra handles de resize
-- ✅ 8 handles interactivos (4 esquinas + 4 bordes)
-- ✅ Drag and drop para cambiar tamaño en tiempo real
-- ✅ Indicador visual de tamaño actual (ancho × alto)
-- ✅ Borde azul resaltado cuando handles están visibles
-- ✅ Optimización: actualización en tiempo real sin guardar en historial
-- ✅ Guardado único en historial solo al terminar el drag
-- ✅ Validación de tamaños mínimos (200px) y máximos (5000px)
-- ✅ Handles se ocultan automáticamente al seleccionar objetos
-- ✅ Compatible con todos los modos de dibujo existentes
+- ✅ Canvas se ajusta automáticamente al tamaño de la ventana disponible
+- ✅ Respeta paneles laterales (Sidebar, History)
+- ✅ **Fix Crítico**: Redimensionamiento manual funciona sin ser interrumpido por el automático
+- ✅ Handles de resize interactivos
 - **Estado**: ✅ Completado
-- **Fecha**: Enero 2025
+
+#### 5. UI Compacta y Moderna
+
+- ✅ Toolbar movida al Header para ganar espacio vertical
+- ✅ Estilo "Outlined" consistente en todos los botones
+- ✅ Separadores visuales claros entre grupos de herramientas
+- ✅ Eliminación de etiquetas de texto innecesarias para reducir ruido visual
+- **Estado**: ✅ Completado
+
+#### 6. Layout Automático de Imágenes
+
+- ✅ **Smart Placement**: Algoritmo de "Best Fit" para colocar imágenes en huecos disponibles
+- ✅ **Auto-Expand**: El canvas crece automáticamente si la imagen no cabe
+- ✅ **Experiencia Fluida**: Pegar múltiples capturas ya no requiere moverlas manualmente
+- **Estado**: ✅ Completado
 
 ---
 
-### 🔴 Crítico (Implementar Pronto)
+### 📋 Resumen de Features
 
-#### 1. Auto-guardado Local
+| Feature                         | Prioridad  | Complejidad | Tiempo   | Estado        |
+| ------------------------------- | ---------- | ----------- | -------- | ------------- |
+| **✅ Refactorización Completa** | -          | -           | -        | ✅ Completado |
+| **✅ Vista Mobile**             | -          | -           | -        | ✅ Completado |
+| **✅ Editor de Texto Inline**   | -          | -           | -        | ✅ Completado |
+| **✅ Redimensionar Canvas**     | -          | -           | -        | ✅ Completado |
+| **✅ Toolbar en Header**        | -          | -           | -        | ✅ Completado |
+| **✅ Layout Automático**        | -          | -           | -        | ✅ Completado |
+| Auto-guardado Local             | ALTA       | BAJA        | 1 día    | 📝 Pendiente  |
+| Atajo Descargar (Cmd+S)         | MEDIA      | BAJA        | 1 hora   | 📝 Pendiente  |
+| Proyectos Guardados             | MEDIA-ALTA | MEDIA       | 2-3 días | 📝 Pendiente  |
+| UX Múltiples Imágenes           | MEDIA      | MEDIA       | 2-3 días | 📝 Pendiente  |
+| PWA (Instalable)                | MEDIA      | BAJA        | 1 día    | 📝 Pendiente  |
 
-- **Problema**: Si cierras el navegador, pierdes todo
-- **Solución**: localStorage automático cada 5 segundos
-- **Impacto**: CRÍTICO para el flujo de trabajo
-- **Prioridad**: ALTA
-- **Complejidad**: BAJA
-- **Tiempo estimado**: 1 día
-- **Estado**: 📝 Pendiente
-
-#### 2. Layout Automático para Múltiples Imágenes
-
-- **Problema**: Las imágenes se centran y se superponen
-- **Solución**: Modo grid o apilar verticalmente automáticamente
-- **Impacto**: ALTO - mejora mucho la experiencia
-- **Prioridad**: ALTA
-- **Complejidad**: MEDIA
-- **Tiempo estimado**: 2-3 días
-- **Estado**: 📝 Pendiente
-
----
-
-### 🟡 Importante (Próximas 2 Semanas)
-
-#### 4. Atajo para Descargar
-
-- **Problema**: Tener que hacer clic en descargar cada vez
-- **Solución**: Cmd+S para descargar directamente
-- **Impacto**: MEDIO - ahorra tiempo
-- **Prioridad**: MEDIA
-- **Complejidad**: BAJA
-- **Tiempo estimado**: 1 hora
-- **Estado**: 📝 Pendiente
-
-#### 5. Proyectos Guardados
-
-- **Problema**: No puedes tener varias evidencias abiertas
-- **Solución**: Guardar proyectos con nombre (ej: "Feature-X", "Bug-123")
-- **Impacto**: ALTO - permite trabajar en múltiples tareas
-- **Prioridad**: MEDIA-ALTA
-- **Complejidad**: MEDIA
-- **Tiempo estimado**: 2-3 días
-- **Estado**: 📝 Pendiente
-
-#### 7. Mejoras de UX para Múltiples Imágenes
-
-- **Problema**: Difícil seleccionar imagen específica cuando hay muchas
-- **Solución**:
-  - Miniaturas en sidebar
-  - Seleccionar imagen específica fácilmente
-  - Reordenar imágenes arrastrando
-- **Impacto**: MEDIO - mejora organización
-- **Prioridad**: MEDIA
-- **Complejidad**: MEDIA
-- **Tiempo estimado**: 2-3 días
-- **Estado**: 📝 Pendiente
-
----
-
-### 🟢 Nice to Have (Largo Plazo)
-
-#### 8. Herramienta de Lupa/Zoom Local
-
-- **Descripción**: Lupa para ver con zoom un punto específico del canvas
-- **Comportamiento**: Click y arrastrar → muestra área con zoom configurable
-- **Prioridad**: MEDIA
-- **Complejidad**: MEDIA-ALTA
-- **Tiempo estimado**: 2-3 días
-- **Estado**: 📝 Pendiente
-
-#### 9. Integración con Herramientas Dev
-
-- Botón "Copiar para Jira/GitHub"
-- Formato optimizado para issues
-- Watermark opcional con info del proyecto
-- **Prioridad**: BAJA
-- **Complejidad**: MEDIA
-- **Tiempo estimado**: 2-3 días
-- **Estado**: 📝 Pendiente
-
-#### 10. Extensión de Navegador
-
-- Capturar screenshot directamente
-- Abrir QuickSnap con imagen ya cargada
-- **Prioridad**: BAJA
-- **Complejidad**: ALTA
-- **Tiempo estimado**: 1-2 semanas
-- **Estado**: 📝 Pendiente
-
-#### 11. Plantillas de Anotación
-
-- Guardar "estilos" de anotación (ej: "Bug report", "Feature demo")
-- **Prioridad**: BAJA
-- **Complejidad**: MEDIA
-- **Tiempo estimado**: 2-3 días
-- **Estado**: 📝 Pendiente
-
----
-
-## 📋 Resumen de Features
-
-| Feature                         | Prioridad  | Complejidad | Tiempo      | Estado        |
-| ------------------------------- | ---------- | ----------- | ----------- | ------------- |
-| **✅ Refactorización Completa** | -          | -           | -           | ✅ Completado |
-| **✅ Vista Mobile**             | -          | -           | -           | ✅ Completado |
-| **✅ Editor de Texto Inline**   | -          | -           | -           | ✅ Completado |
-| **✅ Redimensionar Canvas**     | -          | -           | -           | ✅ Completado |
-| Auto-guardado Local             | ALTA       | BAJA        | 1 día       | 📝 Pendiente  |
-| Layout Automático Imágenes      | ALTA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
-| Atajo Descargar (Cmd+S)         | MEDIA      | BAJA        | 1 hora      | 📝 Pendiente  |
-| Proyectos Guardados             | MEDIA-ALTA | MEDIA       | 2-3 días    | 📝 Pendiente  |
-| UX Múltiples Imágenes           | MEDIA      | MEDIA       | 2-3 días    | 📝 Pendiente  |
-| Herramienta Lupa/Zoom           | MEDIA      | MEDIA-ALTA  | 2-3 días    | 📝 Pendiente  |
-| Integración Dev Tools           | BAJA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
-| Extensión Navegador             | BAJA       | ALTA        | 1-2 semanas | 📝 Pendiente  |
-| Plantillas de Anotación         | BAJA       | MEDIA       | 2-3 días    | 📝 Pendiente  |
-
-**Total estimado para críticos:** 3-4 días de desarrollo
+**Total estimado para críticos:** 1-2 días de desarrollo
 **Total estimado para importantes:** 5-8 días de desarrollo
-**Total estimado para nice to have:** 2-3 semanas de desarrollo
 
 ---
 
@@ -467,7 +253,6 @@ Con **auto-guardado** y **layout automático**, sería una herramienta perfecta 
 **Estado del proyecto**:
 
 - ✅ Código refactorizado y limpio
-- ✅ Vista mobile completa
-- ✅ Editor de texto inline (similar a Figma/Canva)
-- ✅ Redimensionamiento de canvas con drag and drop
-- 🚀 Listo para nuevas features críticas (auto-guardado y layout automático)
+- ✅ Interfaz optimizada al máximo (espacio, usabilidad)
+- ✅ UX de múltiples imágenes resuelta (Smart Placement)
+- 🚀 Listo para implementar persistencia (auto-guardado)

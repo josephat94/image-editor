@@ -1484,46 +1484,112 @@ export const useCanvas = () => {
 
       img.scale(scale);
 
-      // Calcular posición inteligente para múltiples imágenes
-      let left = (canvas.width! - img.width! * scale) / 2;
-      let top = (canvas.height! - img.height! * scale) / 2;
+      // Calcular posición inteligente para múltiples imágenes (Best Fit Strategy)
+      const newImgWidth = img.width! * scale;
+      const newImgHeight = img.height! * scale;
+      const gap = 20;
 
       const existingImages = canvas.getObjects("image");
-      
+
+      // Posición por defecto (centro) si es la primera imagen
+      let bestPos = {
+        left: (canvas.width! - newImgWidth) / 2,
+        top: (canvas.height! - newImgHeight) / 2,
+      };
+
       if (existingImages.length > 0) {
-        const lastImg = existingImages[existingImages.length - 1];
-        const gap = 20;
-        
-        // Calcular dimensiones reales de la última imagen
-        const lastImgWidth = lastImg.width! * lastImg.scaleX!;
-        const lastImgRight = lastImg.left! + lastImgWidth;
-        
-        // Calcular dimensiones de la nueva imagen
-        const newImgWidth = img.width! * scale;
-        
-        // Verificar si cabe a la derecha
-        if (lastImgRight + newImgWidth + gap < canvas.width!) {
-          left = lastImgRight + gap;
-          top = lastImg.top!; // Mantener alineación superior
-        } else {
-          // No cabe a la derecha, ir a nueva fila
-          // Encontrar la posición Y más baja de todas las imágenes existentes para evitar superposición
+        // Puntos candidatos: inicio y puntos relativos a cada imagen existente
+        const candidates = [{ left: gap, top: gap }];
+
+        existingImages.forEach((obj) => {
+          const objWidth = obj.width! * obj.scaleX!;
+          const objHeight = obj.height! * obj.scaleY!;
+
+          // Candidato a la derecha
+          candidates.push({
+            left: obj.left! + objWidth + gap,
+            top: obj.top!,
+          });
+
+          // Candidato abajo (nueva fila)
+          candidates.push({
+            left: gap,
+            top: obj.top! + objHeight + gap,
+          });
+        });
+
+        // Ordenar candidatos: prioridad arriba-izquierda
+        candidates.sort((a, b) => {
+          // Margen de error pequeño para alineación vertical
+          if (Math.abs(a.top - b.top) > 10) return a.top - b.top;
+          return a.left - b.left;
+        });
+
+        // Buscar el primer candidato válido (que no colisione y quepa)
+        let found = false;
+        for (const pos of candidates) {
+          // Verificar límites del canvas (ancho)
+          if (pos.left + newImgWidth > canvas.width!) continue;
+
+          // Verificar colisiones con otras imágenes
+          const hasCollision = existingImages.some((obj) => {
+            const objWidth = obj.width! * obj.scaleX!;
+            const objHeight = obj.height! * obj.scaleY!;
+
+            // Lógica de no-superposición (AABB)
+            const isSeparate =
+              pos.left + newImgWidth <= obj.left! || // Nuevo está a la izquierda
+              pos.left >= obj.left! + objWidth || // Nuevo está a la derecha
+              pos.top + newImgHeight <= obj.top! || // Nuevo está arriba
+              pos.top >= obj.top! + objHeight; // Nuevo está abajo
+
+            return !isSeparate; // Si no están separados, hay colisión
+          });
+
+          if (!hasCollision) {
+            bestPos = pos;
+            found = true;
+            break;
+          }
+        }
+
+        // Fallback: Si no se encontró hueco, colocar al final (abajo de la más baja)
+        if (!found) {
           const maxBottom = existingImages.reduce((max, obj) => {
-            const bottom = obj.top! + (obj.height! * obj.scaleY!);
+            const bottom = obj.top! + obj.height! * obj.scaleY!;
             return Math.max(max, bottom);
           }, 0);
-          
-          left = 20; // Margen izquierdo inicial
-          top = maxBottom + gap;
+          bestPos = { left: gap, top: maxBottom + gap };
         }
-        
-        // Ajustar si se sale del canvas verticalmente (opcional: expandir canvas)
-        // Por ahora dejaremos que se salga visualmente si es necesario, el usuario puede hacer resize
+      }
+
+      // Verificar si es necesario redimensionar el canvas si la imagen se sale
+      const requiredWidth = bestPos.left + newImgWidth + 20; // +20 padding
+      const requiredHeight = bestPos.top + newImgHeight + 20; // +20 padding
+
+      let newCanvasWidth = canvas.width!;
+      let newCanvasHeight = canvas.height!;
+      let needsResize = false;
+
+      if (requiredWidth > canvas.width!) {
+        newCanvasWidth = requiredWidth;
+        needsResize = true;
+      }
+
+      if (requiredHeight > canvas.height!) {
+        newCanvasHeight = requiredHeight;
+        needsResize = true;
+      }
+
+      if (needsResize) {
+        // Redimensionar el canvas para que quepa la nueva imagen
+        // No guardamos en historial aquí porque la acción de agregar imagen ya lo hará
+        resizeCanvas(newCanvasWidth, newCanvasHeight, false);
       }
 
       img.set({
-        left,
-        top,
+        left: bestPos.left,
+        top: bestPos.top,
         selectable: true,
         evented: true,
       });
