@@ -33,7 +33,13 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
     <header
       id="editor-header"
       className={cn(
-        "flex flex-col shrink-0 border-b border-gray-700 bg-gray-800 transition-all duration-300",
+        "flex shrink-0 items-center border-b border-gray-700 bg-gray-800 transition-all duration-300",
+        // Height: mobile h-14, laptop h-[60px], desktop h-16
+        isMobile ? "h-14" : isLaptop ? "h-[60px]" : "h-16",
+        // Gap: mobile gap-2, laptop gap-3, desktop gap-4
+        isMobile ? "gap-2" : isLaptop ? "gap-3" : "gap-4",
+        // Padding horizontal: mobile px-3, laptop px-5, desktop px-6
+        isMobile ? "px-3" : isLaptop ? "px-5" : "px-6",
         !isMobile && isHistoryPanelOpen
           ? "pr-[22rem]"
           : isMobile
@@ -43,62 +49,55 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           : "pr-6"
       )}
     >
-      {/* Primera fila: Logo y acciones */}
-      <div
+      <SidebarTrigger className="text-white h-10 w-10 md:h-10 md:w-10 shrink-0" />
+      {!isMobile && (
+        <Separator orientation="vertical" className="h-6 bg-gray-600 shrink-0" />
+      )}
+      <h1
         className={cn(
-          "flex items-center",
-          // Height: mobile h-14, laptop h-[60px], desktop h-16
-          isMobile ? "h-14" : isLaptop ? "h-[60px]" : "h-16",
-          // Gap: mobile gap-2, laptop gap-3, desktop gap-4
-          isMobile ? "gap-2" : isLaptop ? "gap-3" : "gap-4",
-          // Padding horizontal: mobile px-3, laptop px-5, desktop px-6
-          isMobile ? "px-3" : isLaptop ? "px-5" : "px-6"
+          "font-bold text-white flex items-center gap-2 shrink-0",
+          isMobile ? "text-lg" : "text-xl"
         )}
       >
-        <SidebarTrigger className="text-white h-10 w-10 md:h-10 md:w-10" />
-        {!isMobile && (
-          <Separator orientation="vertical" className="h-6 bg-gray-600" />
-        )}
-        <h1
-          className={cn(
-            "font-bold text-white",
-            isMobile ? "text-lg" : "text-xl"
-          )}
-        >
-          {isMobile ? "QS" : "QuickSnap"}
-        </h1>
-        <div
-          className={cn("ml-auto flex items-center gap-2", isMobile && "gap-1")}
-        >
-          {!isMobile && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={onRestartTour}
-                  variant="ghost"
-                  size="icon"
-                  className="text-gray-300 hover:text-white"
-                >
-                  <HelpCircle className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Ver tour de bienvenida</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-      </div>
-
-      {/* Segunda fila: Toolbar */}
+        <img
+          src="/favicon.png"
+          alt="Watermark"
+          className={isLaptop ? "w-[40px]" : "w-[40px]"}
+        />
+        QS
+      </h1>
+      
+      {/* Toolbar en la misma fila */}
       {!isMobile && (
-        <div className="border-t border-gray-700 px-4 py-2">
+        <div className="flex-1 flex justify-center items-center mx-4">
           <EditorToolbar
             onFileUpload={onFileUpload}
             onRemoveBackground={onRemoveBackground}
           />
         </div>
       )}
+
+      <div
+        className={cn("flex items-center gap-2 shrink-0", isMobile && "gap-1", !isMobile && "ml-auto")}
+      >
+        {!isMobile && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={onRestartTour}
+                variant="ghost"
+                size="icon"
+                className="text-gray-300 hover:text-white"
+              >
+                <HelpCircle className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Ver tour de bienvenida</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
     </header>
   );
 };

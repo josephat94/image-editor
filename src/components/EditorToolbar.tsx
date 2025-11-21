@@ -110,7 +110,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       <div
         className={cn(
           "flex flex-wrap justify-center items-center",
-          isLaptop ? "gap-2.5" : "gap-2"
+          isLaptop ? "gap-2" : "gap-1.5"
         )}
       >
         {/* Sección: Archivo */}
@@ -220,7 +220,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
               onClick={toggleTextMode}
               variant="outline"
               size="icon"
-              className={isTextMode ? "border-blue-500 bg-blue-500/20 hover:bg-blue-500/30" : ""}
+              className={
+                isTextMode
+                  ? "border-blue-500 bg-blue-500/20 hover:bg-blue-500/30"
+                  : ""
+              }
             >
               <Type className="w-4 h-4" />
             </Button>
@@ -302,7 +306,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
               variant="outline"
               disabled={copied}
               size="icon"
-              className={copied ? "border-green-500 bg-green-500/20 hover:bg-green-500/30" : ""}
+              className={
+                copied
+                  ? "border-green-500 bg-green-500/20 hover:bg-green-500/30"
+                  : ""
+              }
             >
               {copied ? (
                 <Check className="w-4 h-4" />
