@@ -106,12 +106,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   };
 
   return (
-    <div
-      className={cn(
-        "sticky top-0 z-10 bg-gray-700 rounded-lg shadow-inner md:top-4",
-        isLaptop ? "p-3" : "p-2.5"
-      )}
-    >
+    <div className="w-full">
       <div
         className={cn(
           "flex flex-wrap justify-center items-center",

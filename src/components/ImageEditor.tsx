@@ -4,7 +4,6 @@ import { SidebarInset, useSidebar } from "@/components/ui/sidebar";
 import { Loader2 } from "lucide-react";
 import { EditorHeader } from "@/components/EditorHeader";
 import { EditorSidebar } from "@/components/EditorSidebar";
-import { EditorToolbar } from "@/components/EditorToolbar";
 import { EditorCanvas } from "@/components/EditorCanvas";
 import { TextInputPanel } from "@/components/TextInputPanel";
 import { HistoryPanelFloating } from "@/components/HistoryPanelFloating";
@@ -158,7 +157,11 @@ const ImageEditorContent: React.FC = () => {
             )}
           >
             {/* Header */}
-            <EditorHeader onRestartTour={handleRestartTour} />
+            <EditorHeader 
+              onRestartTour={handleRestartTour}
+              onFileUpload={handleFileUpload}
+              onRemoveBackground={handleRemoveBackground}
+            />
 
             {/* Contenido principal */}
             <div
@@ -177,28 +180,20 @@ const ImageEditorContent: React.FC = () => {
               )}
             >
               <div className="w-full max-w-full mx-auto">
-                <div className="mb-6">
-                  {/* Mensaje de error para remover fondo */}
-                  {bgRemovalError && (
-                    <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
-                      ⚠️ {bgRemovalError}
-                    </div>
-                  )}
+                {/* Mensaje de error para remover fondo */}
+                {bgRemovalError && (
+                  <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
+                    ⚠️ {bgRemovalError}
+                  </div>
+                )}
 
-                  {/* Mensaje de procesamiento */}
-                  {isRemovingBg && (
-                    <div className="bg-blue-500/20 border border-blue-500 text-blue-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
-                      <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                      Removiendo fondo con IA... Esto puede tardar unos segundos
-                    </div>
-                  )}
-
-                  {/* Toolbar */}
-                  <EditorToolbar
-                    onFileUpload={handleFileUpload}
-                    onRemoveBackground={handleRemoveBackground}
-                  />
-                </div>
+                {/* Mensaje de procesamiento */}
+                {isRemovingBg && (
+                  <div className="bg-blue-500/20 border border-blue-500 text-blue-200 px-4 py-2 rounded-lg text-center text-sm mb-4">
+                    <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                    Removiendo fondo con IA... Esto puede tardar unos segundos
+                  </div>
+                )}
 
                 {/* Panel de texto */}
                 <TextInputPanel />
