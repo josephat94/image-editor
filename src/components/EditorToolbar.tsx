@@ -25,6 +25,8 @@ import {
   ChevronsUp,
   ChevronsDown,
   ZoomIn,
+  ZoomOut,
+  Maximize2,
 } from "lucide-react";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useUIStore } from "@/stores/uiStore";
@@ -76,6 +78,11 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     downloadImage,
     copyToClipboard,
     clearCanvas,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    fitToScreen,
+    currentZoom,
   } = useCanvasContext();
 
   const { copied, setCopied, isRemovingBg } = useUIStore();
@@ -249,6 +256,46 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
               ) : (
                 <Scissors className="w-4 h-4" />
               )}
+            </Button>
+          </TooltipButton>
+        </div>
+
+        {/* Divisor */}
+        <div className="h-8 w-px bg-gray-600" />
+
+        {/* Sección: Zoom */}
+        <div className="flex gap-2 items-center">
+          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
+            Zoom
+          </div>
+          <TooltipButton content="Alejar (Rueda del mouse)">
+            <Button onClick={zoomOut} variant="outline" size="icon">
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+          </TooltipButton>
+
+          <TooltipButton
+            content={`Zoom actual: ${Math.round(currentZoom * 100)}%`}
+          >
+            <Button
+              onClick={resetZoom}
+              variant="outline"
+              size="sm"
+              className="min-w-[70px]"
+            >
+              {Math.round(currentZoom * 100)}%
+            </Button>
+          </TooltipButton>
+
+          <TooltipButton content="Acercar (Rueda del mouse)">
+            <Button onClick={zoomIn} variant="outline" size="icon">
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+          </TooltipButton>
+
+          <TooltipButton content="Ajustar a pantalla">
+            <Button onClick={fitToScreen} variant="outline" size="icon">
+              <Maximize2 className="w-4 h-4" />
             </Button>
           </TooltipButton>
         </div>

@@ -25,6 +25,10 @@ export const useCanvas = () => {
   const [annotationCounter, setAnnotationCounter] = useState(1);
   const [layersVersion, setLayersVersion] = useState(0); // Para forzar re-render de la lista de capas
   const [historyVersion, setHistoryVersion] = useState(0); // Para forzar re-render del historial
+  const [currentZoom, setCurrentZoom] = useState(1); // Zoom actual del canvas
+  const isPanningRef = useRef(false); // Flag para panning
+  const lastPanPointRef = useRef({ x: 0, y: 0 }); // Último punto de panning
+  const isSpacePressedRef = useRef(false); // Flag para tecla espacio
 
   // Interfaz para el historial con metadata
   interface HistoryState {
@@ -124,6 +128,54 @@ export const useCanvas = () => {
     tempMagnifier: null,
   });
 
+  // Función para ajustar el canvas inicialmente para que quepa en la pantalla
+  const adjustCanvasToFit = (force: boolean = false) => {
+    if (!fabricCanvasRef.current) return;
+
+    const canvas = fabricCanvasRef.current;
+    const canvasWidth = canvas.width || 1200;
+    const canvasHeight = canvas.height || 800;
+
+    // Obtener el tamaño del contenedor del canvas
+    const canvasElement = canvas.getElement();
+    if (!canvasElement) return;
+
+    const container = canvasElement.parentElement;
+    if (!container) return;
+
+    // Esperar a que el DOM esté listo
+    setTimeout(() => {
+      const containerRect = container.getBoundingClientRect();
+      const availableWidth = containerRect.width - 40; // Padding
+      const availableHeight = window.innerHeight - 200; // Espacio para toolbar y otros elementos
+
+      // Calcular el zoom necesario para que el canvas quepa
+      const scaleX = availableWidth / canvasWidth;
+      const scaleY = availableHeight / canvasHeight;
+      const initialZoom = Math.min(scaleX, scaleY, 1); // No hacer zoom in, solo out si es necesario
+
+      // Solo ajustar si se fuerza o si el zoom actual es 1 (por defecto)
+      const currentZoom = canvas.getZoom();
+      if (force || (currentZoom === 1 && initialZoom < 1)) {
+        canvas.setZoom(initialZoom);
+        setCurrentZoom(initialZoom);
+
+        // Centrar el canvas
+        const vpt = canvas.viewportTransform;
+        if (vpt) {
+          const scaledWidth = canvasWidth * initialZoom;
+          const scaledHeight = canvasHeight * initialZoom;
+          const offsetX = (availableWidth - scaledWidth) / 2;
+          const offsetY = (availableHeight - scaledHeight) / 2;
+          vpt[4] = offsetX;
+          vpt[5] = offsetY;
+          canvas.setViewportTransform(vpt);
+        }
+        canvas.renderAll();
+      }
+    }, 100);
+  };
+
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -137,6 +189,19 @@ export const useCanvas = () => {
 
     fabricCanvasRef.current = canvas;
     setIsReady(true);
+
+    // Ajustar el canvas inicialmente para que quepa en la pantalla
+    adjustCanvasToFit(true);
+
+    // Ajustar el canvas cuando se redimensiona la ventana (solo si el zoom es 1)
+    const handleResize = () => {
+      // Solo ajustar automáticamente si el usuario no ha hecho zoom manual
+      const currentZoom = canvas.getZoom();
+      if (currentZoom === 1) {
+        adjustCanvasToFit(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
 
     // Guardar estado inicial
     saveCanvasState();
@@ -309,9 +374,130 @@ export const useCanvas = () => {
     // Agregar el event listener para Delete/Backspace
     document.addEventListener("keydown", handleKeyDown);
 
+    // ===== ZOOM Y PANNING =====
+    // Manejar zoom con la rueda del mouse
+    const handleWheel = (e: WheelEvent) => {
+      // Solo hacer zoom si el canvas está enfocado o el mouse está sobre él
+      const canvasElement = canvas.getElement();
+      if (!canvasElement) return;
+
+      const rect = canvasElement.getBoundingClientRect();
+      const isOverCanvas =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+
+      if (!isOverCanvas) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Obtener el punto del mouse relativo al canvas
+      const pointer = canvas.getPointer(e);
+      const zoom = canvas.getZoom();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1; // Zoom in/out
+      const newZoom = Math.max(0.1, Math.min(5, zoom * delta)); // Limitar entre 0.1x y 5x
+
+      // Zoom hacia el punto del mouse
+      canvas.zoomToPoint(pointer, newZoom);
+      setCurrentZoom(newZoom);
+      canvas.renderAll();
+    };
+
+    // Manejar panning con botón medio del mouse o espacio + arrastre
+    const handleMouseDown = (e: fabric.IEvent) => {
+      const evt = e.e as MouseEvent;
+      // Botón medio del mouse (button === 1) o espacio + click izquierdo
+      if (evt.button === 1 || (evt.button === 0 && isSpacePressedRef.current)) {
+        isPanningRef.current = true;
+        canvas.selection = false;
+        canvas.defaultCursor = "grabbing";
+        canvas.hoverCursor = "grabbing";
+        lastPanPointRef.current = canvas.getPointer(e.e);
+        evt.preventDefault();
+      }
+    };
+
+    const handleMouseMove = (e: fabric.IEvent) => {
+      if (!isPanningRef.current) return;
+
+      const evt = e.e as MouseEvent;
+      const pointer = canvas.getPointer(evt);
+      const vpt = canvas.viewportTransform;
+      if (!vpt) return;
+
+      // Calcular el desplazamiento
+      const deltaX = pointer.x - lastPanPointRef.current.x;
+      const deltaY = pointer.y - lastPanPointRef.current.y;
+
+      // Aplicar el desplazamiento al viewport
+      vpt[4] += deltaX;
+      vpt[5] += deltaY;
+
+      canvas.setViewportTransform(vpt);
+      lastPanPointRef.current = pointer;
+      canvas.renderAll();
+    };
+
+    const handleMouseUp = () => {
+      if (isPanningRef.current) {
+        isPanningRef.current = false;
+        canvas.selection = true;
+        canvas.defaultCursor = "default";
+        canvas.hoverCursor = "move";
+      }
+    };
+
+    // Manejar tecla espacio para panning
+    const handleSpaceKey = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        const target = e.target as HTMLElement;
+        if (
+          target.tagName !== "INPUT" &&
+          target.tagName !== "TEXTAREA" &&
+          !target.isContentEditable
+        ) {
+          e.preventDefault();
+          isSpacePressedRef.current = true;
+          if (!isPanningRef.current) {
+            canvas.defaultCursor = "grab";
+            canvas.hoverCursor = "grab";
+          }
+        }
+      }
+    };
+
+    const handleSpaceKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        isSpacePressedRef.current = false;
+        if (!isPanningRef.current) {
+          canvas.defaultCursor = "default";
+          canvas.hoverCursor = "move";
+        }
+      }
+    };
+
+    // Agregar event listeners para zoom y panning
+    canvas.getElement().addEventListener("wheel", handleWheel, {
+      passive: false,
+    });
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
+    document.addEventListener("keydown", handleSpaceKey);
+    document.addEventListener("keyup", handleSpaceKeyUp);
+
     // Cleanup
     return () => {
+      window.removeEventListener("resize", handleResize);
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleSpaceKey);
+      document.removeEventListener("keyup", handleSpaceKeyUp);
+      canvas.getElement().removeEventListener("wheel", handleWheel);
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
       if (modifyTimeoutRef.current) {
         clearTimeout(modifyTimeoutRef.current);
       }
@@ -2441,6 +2627,49 @@ export const useCanvas = () => {
     setHistoryVersion((v) => v + 1);
   };
 
+  // Funciones públicas para controlar el zoom
+  const zoomIn = () => {
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+    const zoom = canvas.getZoom();
+    const newZoom = Math.min(5, zoom * 1.2);
+    const center = canvas.getCenter();
+    canvas.zoomToPoint({ x: center.left, y: center.top }, newZoom);
+    setCurrentZoom(newZoom);
+    canvas.renderAll();
+  };
+
+  const zoomOut = () => {
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+    const zoom = canvas.getZoom();
+    const newZoom = Math.max(0.1, zoom * 0.8);
+    const center = canvas.getCenter();
+    canvas.zoomToPoint({ x: center.left, y: center.top }, newZoom);
+    setCurrentZoom(newZoom);
+    canvas.renderAll();
+  };
+
+  const resetZoom = () => {
+    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+    canvas.setZoom(1);
+    setCurrentZoom(1);
+
+    // Resetear el viewport al centro
+    const vpt = canvas.viewportTransform;
+    if (vpt) {
+      vpt[4] = 0;
+      vpt[5] = 0;
+      canvas.setViewportTransform(vpt);
+    }
+    canvas.renderAll();
+  };
+
+  const fitToScreen = () => {
+    adjustCanvasToFit(true);
+  };
+
   const removeImageBackground = async () => {
     if (!fabricCanvasRef.current)
       return { success: false, error: "Canvas no disponible" };
@@ -2579,5 +2808,11 @@ export const useCanvas = () => {
     goToHistoryState,
     clearHistory,
     historyVersion,
+    // Funciones de zoom y panning
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    fitToScreen,
+    currentZoom,
   };
 };

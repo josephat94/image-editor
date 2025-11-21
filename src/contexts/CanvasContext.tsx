@@ -51,6 +51,12 @@ interface CanvasContextType {
   goToHistoryState: (index: number) => void;
   clearHistory: () => void;
   historyVersion: number;
+  // Funciones de zoom y panning
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
+  fitToScreen: () => void;
+  currentZoom: number;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
