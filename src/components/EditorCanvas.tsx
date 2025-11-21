@@ -1,23 +1,135 @@
-import React from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { Upload } from "lucide-react";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useEditorStore } from "@/stores/editorStore";
 import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useUIStore } from "@/stores/uiStore";
 import { cn } from "@/lib/utils";
 import { CanvasResizeHandles } from "@/components/CanvasResizeHandles";
 
 export const EditorCanvas: React.FC = () => {
-  const { canvasRef, isReady, getLayersList } = useCanvasContext();
+  const { canvasRef, isReady, getLayersList, fabricCanvas, resizeCanvas } =
+    useCanvasContext();
   const { imagePalette } = useEditorStore();
   const isLaptop = useIsLaptop();
   const isMobile = useIsMobile();
+  const { open: sidebarOpen } = useSidebar();
+  const { isHistoryPanelOpen } = useUIStore();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const resizeTimeoutRef = useRef<number | null>(null);
 
   const layers = getLayersList();
   const isCanvasEmpty = layers.length === 0;
 
+  // Función para calcular el tamaño máximo disponible del canvas
+  const calculateMaxCanvasSize = useCallback(() => {
+    if (!fabricCanvas || !containerRef.current) return null;
+
+    // Obtener dimensiones de la ventana
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    // Calcular espacio ocupado por el sidebar (250px cuando está abierto, 0 cuando está cerrado)
+    const sidebarWidth = sidebarOpen && !isMobile ? 250 : 0;
+
+    // Calcular espacio ocupado por el historial panel (22rem = 352px cuando está abierto, 0 cuando está cerrado)
+    const historyPanelWidth = isHistoryPanelOpen && !isMobile ? 352 : 0;
+
+    // Calcular padding del contenedor principal
+    // Mobile: p-3 = 12px, Laptop: p-5 = 20px, Desktop: p-6 = 24px
+    const containerPadding = isMobile ? 24 : isLaptop ? 40 : 48; // 12px * 2, 20px * 2, 24px * 2
+
+    // Obtener altura real del header si existe
+    const headerElement = document.querySelector("header");
+    const headerHeight = headerElement
+      ? headerElement.getBoundingClientRect().height
+      : 64;
+
+    // Obtener altura real del toolbar si existe
+    const toolbarElement = document.querySelector('[class*="EditorToolbar"]');
+    const toolbarHeight = toolbarElement
+      ? toolbarElement.getBoundingClientRect().height
+      : isMobile
+      ? 100
+      : 80;
+
+    // Padding del contenedor del canvas (p-3 = 12px * 2 = 24px)
+    const canvasContainerPadding = 24;
+
+    // Espacio para el indicador de tamaño debajo del canvas (aproximadamente 40px)
+    const sizeIndicatorHeight = 40;
+
+    // Calcular ancho disponible
+    const availableWidth =
+      windowWidth -
+      sidebarWidth -
+      historyPanelWidth -
+      containerPadding -
+      canvasContainerPadding;
+
+    // Calcular alto disponible
+    const availableHeight =
+      windowHeight -
+      headerHeight -
+      toolbarHeight -
+      containerPadding -
+      canvasContainerPadding -
+      sizeIndicatorHeight;
+
+    // Asegurar tamaños mínimos
+    const minWidth = 200;
+    const minHeight = 200;
+
+    return {
+      width: Math.max(minWidth, availableWidth),
+      height: Math.max(minHeight, availableHeight),
+    };
+  }, [fabricCanvas, sidebarOpen, isHistoryPanelOpen, isMobile, isLaptop]);
+
+  // Función para redimensionar el canvas
+  const handleCanvasResize = useCallback(() => {
+    if (!fabricCanvas || !isReady) return;
+
+    const maxSize = calculateMaxCanvasSize();
+    if (maxSize) {
+      resizeCanvas(maxSize.width, maxSize.height, true);
+    }
+  }, [fabricCanvas, isReady, calculateMaxCanvasSize, resizeCanvas]);
+
+  // Efecto para redimensionar el canvas cuando cambia el tamaño de la ventana o las dependencias
+  useEffect(() => {
+    if (!fabricCanvas || !isReady) return;
+
+    const handleResize = () => {
+      // Debounce para evitar demasiadas llamadas durante el resize
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+
+      resizeTimeoutRef.current = window.setTimeout(() => {
+        handleCanvasResize();
+      }, 150);
+    };
+
+    // Escuchar cambios en el tamaño de la ventana
+    window.addEventListener("resize", handleResize);
+
+    // Redimensionar inicialmente y cuando cambien las dependencias
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, [fabricCanvas, isReady, handleCanvasResize]);
+
   return (
     <div
+      ref={containerRef}
       className={cn(
         "flex justify-center items-center w-full",
         isMobile ? "gap-4" : isLaptop ? "gap-5" : "gap-6"
