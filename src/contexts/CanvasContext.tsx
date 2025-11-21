@@ -27,6 +27,8 @@ interface CanvasContextType {
   isTextMode: boolean;
   showResizeHandles: boolean;
   setShowResizeHandles: (show: boolean) => void;
+  isManualResizing: boolean;
+  setIsManualResizing: (isResizing: boolean) => void;
   resizeCanvas: (
     width: number,
     height: number,

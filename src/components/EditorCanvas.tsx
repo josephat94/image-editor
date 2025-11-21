@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { CanvasResizeHandles } from "@/components/CanvasResizeHandles";
 
 export const EditorCanvas: React.FC = () => {
-  const { canvasRef, isReady, getLayersList, fabricCanvas, resizeCanvas } =
+  const { canvasRef, isReady, getLayersList, fabricCanvas, resizeCanvas, isManualResizing } =
     useCanvasContext();
   const { imagePalette } = useEditorStore();
   const isLaptop = useIsLaptop();
@@ -90,13 +90,13 @@ export const EditorCanvas: React.FC = () => {
 
   // Función para redimensionar el canvas
   const handleCanvasResize = useCallback(() => {
-    if (!fabricCanvas || !isReady) return;
+    if (!fabricCanvas || !isReady || isManualResizing) return; // No redimensionar si se está haciendo manualmente
 
     const maxSize = calculateMaxCanvasSize();
     if (maxSize) {
       resizeCanvas(maxSize.width, maxSize.height, true);
     }
-  }, [fabricCanvas, isReady, calculateMaxCanvasSize, resizeCanvas]);
+  }, [fabricCanvas, isReady, isManualResizing, calculateMaxCanvasSize, resizeCanvas]);
 
   // Efecto para redimensionar el canvas cuando cambia el tamaño de la ventana o las dependencias
   useEffect(() => {

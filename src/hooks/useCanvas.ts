@@ -22,6 +22,7 @@ export const useCanvas = () => {
   const [isTextMode, setIsTextMode] = useState(false);
   const [isMagnifierMode, setIsMagnifierMode] = useState(false);
   const [showResizeHandles, setShowResizeHandles] = useState(false);
+  const [isManualResizing, setIsManualResizing] = useState(false); // Flag para redimensionamiento manual
   const [annotationCounter, setAnnotationCounter] = useState(1);
   const [layersVersion, setLayersVersion] = useState(0); // Para forzar re-render de la lista de capas
   const [historyVersion, setHistoryVersion] = useState(0); // Para forzar re-render del historial
@@ -2784,6 +2785,8 @@ export const useCanvas = () => {
     isTextMode,
     showResizeHandles,
     setShowResizeHandles,
+    isManualResizing,
+    setIsManualResizing,
     resizeCanvas,
     currentFont,
     setCurrentFont,

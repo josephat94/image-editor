@@ -8,6 +8,7 @@ export const CanvasResizeHandles: React.FC = () => {
     showResizeHandles,
     setShowResizeHandles,
     resizeCanvas,
+    setIsManualResizing,
   } = useCanvasContext();
   const [isDragging, setIsDragging] = useState(false);
   const [dragHandle, setDragHandle] = useState<string | null>(null);
@@ -49,6 +50,7 @@ export const CanvasResizeHandles: React.FC = () => {
     setDragHandle(handle);
     setStartPos({ x: e.clientX, y: e.clientY });
     setStartSize({ width: canvasWidth, height: canvasHeight });
+    setIsManualResizing(true); // Indicar que se está redimensionando manualmente
   };
 
   useEffect(() => {
@@ -119,6 +121,7 @@ export const CanvasResizeHandles: React.FC = () => {
 
       setIsDragging(false);
       setDragHandle(null);
+      setIsManualResizing(false); // Indicar que terminó el redimensionamiento manual
     };
 
     document.addEventListener("mousemove", handleMouseMove);
