@@ -481,7 +481,6 @@ export const useCanvas = () => {
 
     // Cleanup
     return () => {
-      window.removeEventListener("resize", handleResize);
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keydown", handleSpaceKey);
       document.removeEventListener("keyup", handleSpaceKeyUp);

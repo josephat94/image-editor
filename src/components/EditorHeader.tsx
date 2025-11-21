@@ -51,7 +51,10 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
     >
       <SidebarTrigger className="text-white h-10 w-10 md:h-10 md:w-10 shrink-0" />
       {!isMobile && (
-        <Separator orientation="vertical" className="h-6 bg-gray-600 shrink-0" />
+        <Separator
+          orientation="vertical"
+          className="h-6 bg-gray-600 shrink-0"
+        />
       )}
       <h1
         className={cn(
@@ -66,10 +69,10 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
         />
         QS
       </h1>
-      
+
       {/* Toolbar en la misma fila */}
       {!isMobile && (
-        <div className="flex-1 flex justify-center items-center mx-4">
+        <div className="flex-1 flex justify-center items-center">
           <EditorToolbar
             onFileUpload={onFileUpload}
             onRemoveBackground={onRemoveBackground}
@@ -78,7 +81,11 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
       )}
 
       <div
-        className={cn("flex items-center gap-2 shrink-0", isMobile && "gap-1", !isMobile && "ml-auto")}
+        className={cn(
+          "flex items-center gap-2 shrink-0",
+          isMobile && "gap-1",
+          !isMobile && "ml-auto"
+        )}
       >
         {!isMobile && (
           <Tooltip>

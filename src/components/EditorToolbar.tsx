@@ -20,8 +20,6 @@ import {
   Undo2,
   Redo2,
   CopyPlus,
-  Scissors,
-  Loader2,
   Hash,
   ChevronsUp,
   ChevronsDown,
@@ -231,7 +229,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
             </Button>
           </TooltipButton>
 
-          <TooltipButton content="Remover Fondo IA (F)">
+          {/*    <TooltipButton content="Remover Fondo IA (F)">
             <Button
               id="remove-bg-button"
               onClick={onRemoveBackground}
@@ -246,7 +244,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
                 <Scissors className="w-4 h-4" />
               )}
             </Button>
-          </TooltipButton>
+          </TooltipButton> */}
         </div>
 
         {/* Divisor */}

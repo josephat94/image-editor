@@ -157,7 +157,7 @@ const ImageEditorContent: React.FC = () => {
             )}
           >
             {/* Header */}
-            <EditorHeader 
+            <EditorHeader
               onRestartTour={handleRestartTour}
               onFileUpload={handleFileUpload}
               onRemoveBackground={handleRemoveBackground}

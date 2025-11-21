@@ -110,6 +110,12 @@ export const EditorCanvas: React.FC = () => {
     resizeCanvas,
   ]);
 
+  // Referencia para acceder a la última versión de handleCanvasResize sin agregarlo a las dependencias
+  const handleCanvasResizeRef = useRef(handleCanvasResize);
+  useEffect(() => {
+    handleCanvasResizeRef.current = handleCanvasResize;
+  }, [handleCanvasResize]);
+
   // Efecto para redimensionar el canvas cuando cambia el tamaño de la ventana
   useEffect(() => {
     if (!fabricCanvas || !isReady) return;
@@ -161,7 +167,7 @@ export const EditorCanvas: React.FC = () => {
     resizeTimeoutRef.current = window.setTimeout(() => {
       // Verificar nuevamente antes de ejecutar
       if (!isManualResizing()) {
-        handleCanvasResize();
+        handleCanvasResizeRef.current();
       }
     }, 150);
 
@@ -175,9 +181,8 @@ export const EditorCanvas: React.FC = () => {
     isHistoryPanelOpen,
     isMobile,
     isLaptop,
-    fabricCanvas,
-    isReady,
-    handleCanvasResize,
+    // Eliminamos handleCanvasResize, fabricCanvas, isReady de las dependencias para evitar
+    // que el efecto se dispare por re-renders no relacionados con layout
   ]);
 
   return (
@@ -188,17 +193,6 @@ export const EditorCanvas: React.FC = () => {
         isMobile ? "gap-4" : isLaptop ? "gap-5" : "gap-6"
       )}
     >
-      {/* Marca de agua - Favicon (oculto en mobile) */}
-      {!isMobile && (
-        <div className="mb-4 opacity-50 transition-opacity duration-300 absolute bottom-0 right-[16px] z-20">
-          <img
-            src="/favicon.png"
-            alt="Watermark"
-            className={isLaptop ? "w-[100px]" : "w-[130px]"}
-          />
-        </div>
-      )}
-
       {/* Canvas */}
       <div
         className={cn(
