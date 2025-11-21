@@ -44,9 +44,7 @@ const TooltipButton = ({
   children: React.ReactNode;
 }) => (
   <Tooltip>
-    <TooltipTrigger asChild>
-      {children}
-    </TooltipTrigger>
+    <TooltipTrigger asChild>{children}</TooltipTrigger>
     <TooltipContent>
       <p>{content}</p>
     </TooltipContent>
@@ -225,9 +223,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           <TooltipButton content="Texto (T) - Click en canvas para agregar">
             <Button
               onClick={toggleTextMode}
-              variant={isTextMode ? "default" : "outline"}
+              variant="outline"
               size="icon"
-              className={isTextMode ? "bg-blue-600 hover:bg-blue-700" : ""}
+              className={isTextMode ? "border-blue-500 bg-blue-500/20 hover:bg-blue-500/30" : ""}
             >
               <Type className="w-4 h-4" />
             </Button>
@@ -263,7 +261,9 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </TooltipButton>
 
           <TooltipButton
-            content={`Zoom actual: ${Math.round(currentZoom * 100)}% - Click para resetear`}
+            content={`Zoom actual: ${Math.round(
+              currentZoom * 100
+            )}% - Click para resetear`}
           >
             <Button
               onClick={resetZoom}
@@ -304,9 +304,10 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           >
             <Button
               onClick={handleCopyToClipboard}
-              variant={copied ? "secondary" : "default"}
+              variant="outline"
               disabled={copied}
               size="icon"
+              className={copied ? "border-green-500 bg-green-500/20 hover:bg-green-500/30" : ""}
             >
               {copied ? (
                 <Check className="w-4 h-4" />
@@ -317,7 +318,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </TooltipButton>
 
           <TooltipButton content="Descargar imagen">
-            <Button onClick={downloadImage} variant="default" size="icon">
+            <Button onClick={downloadImage} variant="outline" size="icon">
               <Download className="w-4 h-4" />
             </Button>
           </TooltipButton>
