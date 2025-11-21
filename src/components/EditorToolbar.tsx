@@ -5,6 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 import {
   ArrowRight,
   Type,
@@ -135,7 +136,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Divisor */}
-        <div className="h-8 w-px bg-gray-600" />
+        <Separator orientation="vertical" className="h-8 bg-gray-600" />
 
         {/* Sección: Edición */}
         <div className="flex gap-2 items-center">
@@ -171,7 +172,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Divisor */}
-        <div className="h-8 w-px bg-gray-600" />
+        <Separator orientation="vertical" className="h-8 bg-gray-600" />
 
         {/* Sección: Herramientas */}
         <div id="tools-section" className="flex gap-2 items-center">
@@ -249,7 +250,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Divisor */}
-        <div className="h-8 w-px bg-gray-600" />
+        <Separator orientation="vertical" className="h-8 bg-gray-600" />
 
         {/* Sección: Zoom */}
         <div className="flex gap-2 items-center">
@@ -288,7 +289,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </div>
 
         {/* Divisor */}
-        <div className="h-8 w-px bg-gray-600" />
+        <Separator orientation="vertical" className="h-8 bg-gray-600" />
 
         {/* Sección: Acciones */}
         <div id="actions-section" className="flex gap-2 items-center">
