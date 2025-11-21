@@ -45,7 +45,7 @@ const TooltipButton = ({
 }) => (
   <Tooltip>
     <TooltipTrigger asChild>
-      <span>{children}</span>
+      {children}
     </TooltipTrigger>
     <TooltipContent>
       <p>{content}</p>
@@ -111,20 +111,17 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     <div
       className={cn(
         "sticky top-0 z-10 bg-gray-700 rounded-lg shadow-inner md:top-4",
-        isLaptop ? "p-5" : "p-4"
+        isLaptop ? "p-3" : "p-2.5"
       )}
     >
       <div
         className={cn(
           "flex flex-wrap justify-center items-center",
-          isLaptop ? "gap-3.5" : "gap-3"
+          isLaptop ? "gap-2.5" : "gap-2"
         )}
       >
         {/* Sección: Archivo */}
         <div id="file-upload-section" className="flex gap-2 items-center">
-          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-            Archivo
-          </div>
           <input
             type="file"
             accept="image/*"
@@ -149,9 +146,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
         {/* Sección: Edición */}
         <div className="flex gap-2 items-center">
-          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-            Edición
-          </div>
           <TooltipButton content="Deshacer (Ctrl+Z)">
             <Button onClick={undo} variant="outline" size="icon">
               <Undo2 className="w-4 h-4" />
@@ -188,9 +182,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
         {/* Sección: Herramientas */}
         <div id="tools-section" className="flex gap-2 items-center">
-          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-            Herramientas
-          </div>
           <TooltipButton content="Flecha (A)">
             <Button onClick={addArrow} variant="outline" size="icon">
               <ArrowRight className="w-4 h-4" />
@@ -265,9 +256,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
         {/* Sección: Zoom */}
         <div className="flex gap-2 items-center">
-          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-            Zoom
-          </div>
           <TooltipButton content="Alejar (Rueda del mouse)">
             <Button onClick={zoomOut} variant="outline" size="icon">
               <ZoomOut className="w-4 h-4" />
@@ -275,7 +263,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           </TooltipButton>
 
           <TooltipButton
-            content={`Zoom actual: ${Math.round(currentZoom * 100)}%`}
+            content={`Zoom actual: ${Math.round(currentZoom * 100)}% - Click para resetear`}
           >
             <Button
               onClick={resetZoom}
@@ -305,9 +293,6 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
         {/* Sección: Acciones */}
         <div id="actions-section" className="flex gap-2 items-center">
-          <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mr-1">
-            Acciones
-          </div>
           <TooltipButton content="Limpiar canvas">
             <Button onClick={clearCanvas} variant="outline" size="icon">
               <Trash2 className="w-4 h-4" />
