@@ -82,7 +82,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     currentZoom,
   } = useCanvasContext();
 
-  const { copied, setCopied, isRemovingBg } = useUIStore();
+  const { copied, setCopied } = useUIStore();
   const { toggleTextMode, isTextMode } = useCanvasContext();
   const isLaptop = useIsLaptop();
 
