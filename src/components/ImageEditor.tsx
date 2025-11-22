@@ -11,11 +11,13 @@ import { CanvasProvider, useCanvasContext } from "@/contexts/CanvasContext";
 import { useTour } from "@/hooks/useTour";
 import { usePasteImage } from "@/hooks/usePasteImage";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { useUIStore } from "@/stores/uiStore";
 import { TOUR_STEPS } from "@/constants/tourSteps";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { cn } from "@/lib/utils";
+import { WhatsNewModal } from "@/components/WhatsNewModal";
 import type { DriveStep } from "driver.js";
 
 const ImageEditorContent: React.FC = () => {
@@ -57,6 +59,7 @@ const ImageEditorContent: React.FC = () => {
   };
 
   const { startTour, hasCompletedTour } = useTour(handleTourStepHighlight);
+  const { showModal, handleClose } = useWhatsNew();
 
   // Manejar pegar imagen con Cmd+V
   usePasteImage();
@@ -137,6 +140,9 @@ const ImageEditorContent: React.FC = () => {
     }
   }, [isReady, hasCompletedTour, startTour]);
 
+  // El hook useWhatsNew ya maneja la lógica de mostrar el modal solo una vez
+  // Se mostrará automáticamente después de 1 segundo si no se ha visto antes
+
   // Función para reiniciar el tour manualmente
   const handleRestartTour = () => {
     startTour(TOUR_STEPS);
@@ -208,6 +214,9 @@ const ImageEditorContent: React.FC = () => {
           <HistoryPanelFloating />
         </SidebarInset>
       </div>
+
+      {/* Modal de Novedades */}
+      <WhatsNewModal open={showModal} onOpenChange={handleClose} />
     </TooltipProvider>
   );
 };
