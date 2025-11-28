@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarInset, useSidebar } from "@/components/ui/sidebar";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, CloudUpload } from "lucide-react";
 import { EditorHeader } from "@/components/EditorHeader";
 import { EditorSidebar } from "@/components/EditorSidebar";
 import { EditorCanvas } from "@/components/EditorCanvas";
@@ -31,7 +31,32 @@ const ImageEditorContent: React.FC = () => {
     setIsRemovingBg,
     bgRemovalError,
     setBgRemovalError,
+    lastSaved,
+    isAutoSaving,
   } = useUIStore();
+
+  const [timeAgo, setTimeAgo] = useState<string>("");
+
+  // Actualizar el tiempo transcurrido cada minuto
+  useEffect(() => {
+    if (!lastSaved) return;
+
+    const updateTime = () => {
+      const now = new Date();
+      const diff = Math.floor((now.getTime() - lastSaved.getTime()) / 1000);
+
+      if (diff < 60) {
+        setTimeAgo("hace unos segundos");
+      } else {
+        const minutes = Math.floor(diff / 60);
+        setTimeAgo(`hace ${minutes} min`);
+      }
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, [lastSaved]);
 
   // Callback para manejar el tour cuando se destaca un elemento
   const handleTourStepHighlight = (
@@ -169,6 +194,30 @@ const ImageEditorContent: React.FC = () => {
               onFileUpload={handleFileUpload}
               onRemoveBackground={handleRemoveBackground}
             />
+
+            {/* Indicador de Auto-guardado flotante */}
+            {!isMobile && (isAutoSaving || lastSaved) && (
+              <div
+                className={cn(
+                  "absolute z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-300 bg-gray-800/90 backdrop-blur-sm border border-gray-700 shadow-lg select-none transition-all duration-300",
+                  // Posición: debajo del header, pegado a la derecha
+                  isHistoryPanelOpen ? "right-[22rem]" : "right-6",
+                  isLaptop ? "top-[60px]" : "top-16"
+                )}
+              >
+                {isAutoSaving ? (
+                  <>
+                    <CloudUpload className="w-3.5 h-3.5 animate-pulse" />
+                    <span>Guardando...</span>
+                  </>
+                ) : lastSaved ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                    <span>Guardado {timeAgo}</span>
+                  </>
+                ) : null}
+              </div>
+            )}
 
             {/* Contenido principal */}
             <div

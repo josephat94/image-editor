@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, CloudUpload } from "lucide-react";
 import { EditorToolbar } from "@/components/EditorToolbar";
 import { useUIStore } from "@/stores/uiStore";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -20,32 +19,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onRemoveBackground,
 }) => {
   const isHistoryPanelOpen = useUIStore((state) => state.isHistoryPanelOpen);
-  const { lastSaved, isAutoSaving } = useUIStore();
   const isMobile = useIsMobile();
   const isLaptop = useIsLaptop();
-
-  const [timeAgo, setTimeAgo] = useState<string>("");
-
-  // Actualizar el tiempo transcurrido cada minuto
-  useEffect(() => {
-    if (!lastSaved) return;
-
-    const updateTime = () => {
-      const now = new Date();
-      const diff = Math.floor((now.getTime() - lastSaved.getTime()) / 1000);
-
-      if (diff < 60) {
-        setTimeAgo("hace unos segundos");
-      } else {
-        const minutes = Math.floor(diff / 60);
-        setTimeAgo(`hace ${minutes} min`);
-      }
-    };
-
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
-  }, [lastSaved]);
 
   return (
     <header
@@ -98,49 +73,24 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
         </div>
       )}
 
-      <div
-        className={cn(
-          "flex items-center gap-2 shrink-0",
-          isMobile && "gap-1",
-          !isMobile && "ml-auto"
-        )}
-      >
-        {/* Indicador de Auto-guardado */}
-        {!isMobile && (
-          <div className="flex items-center gap-1.5 mr-2 text-xs text-gray-400 select-none">
-            {isAutoSaving ? (
-              <>
-                <CloudUpload className="w-3.5 h-3.5 animate-pulse" />
-                <span>Guardando...</span>
-              </>
-            ) : lastSaved ? (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                <span>Guardado {timeAgo}</span>
-              </>
-            ) : null}
-          </div>
-        )}
-
-        {/* DESHABILITADO: El tour no está funcionando correctamente */}
-        {/* {!isMobile && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={onRestartTour}
-                variant="ghost"
-                size="icon"
-                className="text-gray-300 hover:text-white"
-              >
-                <HelpCircle className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Ver tour de bienvenida</p>
-            </TooltipContent>
-          </Tooltip>
-        )} */}
-      </div>
+      {/* DESHABILITADO: El tour no está funcionando correctamente */}
+      {/* {!isMobile && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={onRestartTour}
+              variant="ghost"
+              size="icon"
+              className="text-gray-300 hover:text-white"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Ver tour de bienvenida</p>
+          </TooltipContent>
+        </Tooltip>
+      )} */}
     </header>
   );
 };

@@ -282,19 +282,29 @@ export const useCanvas = () => {
     });
 
     fabricCanvasRef.current = canvas;
+
+    // Inicializar zoom siempre en 100% (1.0)
+    canvas.setZoom(1);
+    setCurrentZoom(1);
+
+    // Centrar el canvas en el viewport sin cambiar el zoom
+    const vpt = canvas.viewportTransform;
+    if (vpt) {
+      vpt[4] = 0;
+      vpt[5] = 0;
+      canvas.setViewportTransform(vpt);
+    }
+
     setIsReady(true);
 
     // Intentar cargar desde localStorage primero
     const restored = loadFromLocalStorage();
 
     if (!restored) {
-      // Si no hay datos guardados, ajustar el canvas inicialmente y guardar estado inicial
-      adjustCanvasToFit(true);
+      // Si no hay datos guardados, guardar estado inicial
       saveCanvasState();
-    } else {
-      // Si se restauró, solo ajustar zoom/viewport
-      adjustCanvasToFit(true);
     }
+    // Nota: Ya no ajustamos el zoom automáticamente, siempre inicia en 100%
 
     // Listeners para detectar cambios en el canvas
     canvas.on("object:added", () => {
