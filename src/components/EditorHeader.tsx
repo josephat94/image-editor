@@ -1,6 +1,13 @@
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { EditorToolbar } from "@/components/EditorToolbar";
 import { useUIStore } from "@/stores/uiStore";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -73,8 +80,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
         </div>
       )}
 
-      {/* DESHABILITADO: El tour no está funcionando correctamente */}
-      {/* {!isMobile && (
+      {/* Botón para reiniciar el tour */}
+      {!isMobile && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -90,7 +97,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
             <p>Ver tour de bienvenida</p>
           </TooltipContent>
         </Tooltip>
-      )} */}
+      )}
     </header>
   );
 };

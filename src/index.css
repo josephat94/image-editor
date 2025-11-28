@@ -163,3 +163,74 @@
   position: relative !important;
   z-index: 9999 !important;
 }
+
+/* Driver.js overlay and popover z-index - Independiente del layout */
+.driver-overlay {
+  z-index: 9998 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  pointer-events: auto !important;
+  isolation: isolate !important;
+}
+
+.driver-popover {
+  z-index: 10000 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+  isolation: isolate !important;
+  /* Asegurar que no esté afectado por transform de padres */
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+}
+
+/* Asegurar que los elementos del tour sean visibles */
+.driver-highlighted-element {
+  z-index: 9999 !important;
+  position: relative !important;
+  isolation: isolate !important;
+}
+
+/* Asegurar que el contenedor del tour esté en el body */
+body>.driver-overlay,
+body>.driver-popover {
+  position: fixed !important;
+  z-index: 9998 !important;
+}
+
+body>.driver-popover {
+  z-index: 10000 !important;
+}
+
+/* Estilos para React Joyride - Spotlight visible */
+.react-joyride__spotlight {
+  border: 3px solid rgb(59, 130, 246) !important;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(59, 130, 246, 0.5) !important;
+  border-radius: 0.5rem !important;
+  background: transparent !important;
+}
+
+.react-joyride__overlay {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Asegurar que el elemento resaltado sea visible */
+[data-joyride="spotlight"] {
+  border: 3px solid rgb(59, 130, 246) !important;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(59, 130, 246, 0.5) !important;
+  border-radius: 0.5rem !important;
+  background: transparent !important;
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Asegurar que el elemento target sea visible sobre el overlay */
+.react-joyride__target {
+  position: relative !important;
+  z-index: 10001 !important;
+}

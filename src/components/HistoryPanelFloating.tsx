@@ -93,7 +93,7 @@ export const HistoryPanelFloating: React.FC = () => {
     <>
       {/* Panel derecho flotante - Historial */}
       <div
-        className={`fixed right-0 top-0 bottom-0 bg-gray-900 border-l-2 border-gray-700 shadow-2xl z-30 transition-all duration-300 hidden md:flex flex-col ${
+        className={`fixed right-0 top-0 bottom-0 bg-gray-900 border-l-2 border-gray-700 shadow-2xl z-20 transition-all duration-300 hidden md:flex flex-col ${
           isHistoryPanelOpen ? "w-80" : "w-0"
         }`}
       >

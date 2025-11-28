@@ -13,11 +13,12 @@ import { usePasteImage } from "@/hooks/usePasteImage";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { useUIStore } from "@/stores/uiStore";
+import { TOUR_STEPS } from "@/constants/tourSteps";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { cn } from "@/lib/utils";
 import { WhatsNewModal } from "@/components/WhatsNewModal";
-import type { DriveStep } from "driver.js";
+import Joyride from "react-joyride";
 
 const ImageEditorContent: React.FC = () => {
   const { isReady, addImage, removeImageBackground } = useCanvasContext();
@@ -26,7 +27,6 @@ const ImageEditorContent: React.FC = () => {
   const isLaptop = useIsLaptop();
   const {
     isHistoryPanelOpen,
-    setHistoryPanelOpen,
     isRemovingBg,
     setIsRemovingBg,
     bgRemovalError,
@@ -58,31 +58,7 @@ const ImageEditorContent: React.FC = () => {
     return () => clearInterval(interval);
   }, [lastSaved]);
 
-  // Callback para manejar el tour cuando se destaca un elemento
-  const handleTourStepHighlight = (
-    element: HTMLElement | null,
-    step: DriveStep,
-    _index: number
-  ) => {
-    if (step.element === "#history-panel" || element?.id === "history-panel") {
-      setHistoryPanelOpen(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            const historyPanel = document.querySelector("#history-panel");
-            if (historyPanel) {
-              historyPanel.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
-            }
-          }, 350);
-        });
-      });
-    }
-  };
-
-  const { startTour, hasCompletedTour } = useTour(handleTourStepHighlight);
+  const { run, startTour, handleJoyrideCallback, hasCompletedTour } = useTour();
   const { showModal, handleClose } = useWhatsNew();
 
   // Manejar pegar imagen con Cmd+V
@@ -156,29 +132,29 @@ const ImageEditorContent: React.FC = () => {
   }, [isRemovingBg]);
 
   // Iniciar el tour automáticamente si es la primera vez
-  // DESHABILITADO: El tour no está funcionando correctamente
-  // useEffect(() => {
-  //   if (isReady && !hasCompletedTour()) {
-  //     setTimeout(() => {
-  //       startTour(TOUR_STEPS);
-  //     }, 500);
-  //   }
-  // }, [isReady, hasCompletedTour, startTour]);
+  useEffect(() => {
+    if (isReady && !hasCompletedTour()) {
+      setTimeout(() => {
+        startTour(TOUR_STEPS);
+      }, 500);
+    }
+  }, [isReady, hasCompletedTour, startTour]);
 
   // El hook useWhatsNew ya maneja la lógica de mostrar el modal solo una vez
   // Se mostrará automáticamente después de 1 segundo si no se ha visto antes
 
   // Función para reiniciar el tour manualmente
-  // DESHABILITADO: El tour no está funcionando correctamente
   const handleRestartTour = () => {
-    // startTour(TOUR_STEPS);
+    startTour(TOUR_STEPS);
   };
 
   return (
     <TooltipProvider>
       <div className="min-h-screen flex w-full bg-gray-900">
         {/* Sidebar con configuraciones */}
-        <EditorSidebar />
+        <div className="relative z-0">
+          <EditorSidebar />
+        </div>
 
         {/* Área principal con canvas */}
         <SidebarInset className="flex-1 z-[1]">
@@ -267,6 +243,80 @@ const ImageEditorContent: React.FC = () => {
 
       {/* Modal de Novedades */}
       <WhatsNewModal open={showModal} onOpenChange={handleClose} />
+
+      {/* Tour con React Joyride */}
+      <Joyride
+        steps={TOUR_STEPS}
+        run={run}
+        continuous
+        showProgress
+        showSkipButton
+        disableOverlayClose={false}
+        disableScrolling
+        disableScrollParentFix
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            primaryColor: "#3b82f6",
+            zIndex: 10000,
+            arrowColor: "rgb(31, 41, 55)",
+          },
+          tooltip: {
+            backgroundColor: "rgb(31, 41, 55)",
+            color: "rgb(229, 231, 235)",
+            borderRadius: "0.5rem",
+            border: "1px solid rgb(75, 85, 99)",
+            padding: "1.5rem",
+          },
+          tooltipTitle: {
+            color: "rgb(255, 255, 255)",
+            fontSize: "1.125rem",
+            fontWeight: 600,
+            marginBottom: "0.5rem",
+          },
+          tooltipContent: {
+            color: "rgb(209, 213, 219)",
+            fontSize: "0.9375rem",
+            lineHeight: 1.5,
+            padding: 0,
+          },
+          buttonNext: {
+            backgroundColor: "rgb(59, 130, 246)",
+            color: "white",
+            borderRadius: "0.375rem",
+            padding: "0.5rem 1rem",
+            fontSize: "0.875rem",
+            fontWeight: 500,
+            border: "none",
+          },
+          buttonBack: {
+            color: "rgb(209, 213, 219)",
+            marginRight: "0.5rem",
+            fontSize: "0.875rem",
+          },
+          buttonSkip: {
+            color: "rgb(156, 163, 175)",
+            fontSize: "0.875rem",
+          },
+          overlay: {
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            mixBlendMode: "normal",
+          },
+          spotlight: {
+            borderRadius: "0.5rem",
+            border: "3px solid rgb(59, 130, 246)",
+            boxShadow:
+              "0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.5)",
+          },
+        }}
+        locale={{
+          back: "← Anterior",
+          close: "Cerrar",
+          last: "¡Empezar! 🚀",
+          next: "Siguiente →",
+          skip: "Saltar",
+        }}
+      />
     </TooltipProvider>
   );
 };

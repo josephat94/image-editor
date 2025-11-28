@@ -1,64 +1,27 @@
-import { useEffect, useRef, useState } from "react";
-import { driver } from "driver.js";
-import type { DriveStep, Config } from "driver.js";
-import "driver.js/dist/driver.css";
+import { useState } from "react";
+import type { CallBackProps, Step } from "react-joyride";
 
 const TOUR_COMPLETED_KEY = "quicksnap-tour-completed";
 
-export const useTour = (
-  onStepHighlight?: (
-    element: HTMLElement | null,
-    step: DriveStep,
-    index: number
-  ) => void
-) => {
-  const driverRef = useRef<ReturnType<typeof driver> | null>(null);
-  const [isTourActive, setIsTourActive] = useState(false);
+export const useTour = () => {
+  const [run, setRun] = useState(false);
 
-  useEffect(() => {
-    // Configuración del driver
-    const driverConfig: Config = {
-      showProgress: true,
-      showButtons: ["next", "previous", "close"],
-      nextBtnText: "Siguiente →",
-      prevBtnText: "← Anterior",
-      doneBtnText: "¡Empezar! 🚀",
-      progressText: "{{current}} de {{total}}",
-      allowClose: true,
-      smoothScroll: true,
-      stagePadding: 10,
-      popoverClass: "driver-popover-custom",
-      onHighlightStarted: (_element, step) => {
-        // Llamar al callback si está definido
-        if (onStepHighlight && step.element) {
-          const domElement =
-            typeof step.element === "string"
-              ? (document.querySelector(step.element) as HTMLElement)
-              : (step.element as HTMLElement);
-          onStepHighlight(domElement, step, 0);
-        }
-      },
-      onDestroyed: () => {
-        setIsTourActive(false);
-        // Marcar el tour como completado
-        localStorage.setItem(TOUR_COMPLETED_KEY, "true");
-      },
-    };
+  const startTour = (_steps: Step[]) => {
+    setRun(true);
+  };
 
-    driverRef.current = driver(driverConfig);
+  const stopTour = () => {
+    setRun(false);
+  };
 
-    return () => {
-      if (driverRef.current) {
-        driverRef.current.destroy();
-      }
-    };
-  }, [onStepHighlight]);
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status } = data;
 
-  const startTour = (steps: DriveStep[]) => {
-    if (driverRef.current) {
-      setIsTourActive(true);
-      driverRef.current.setSteps(steps);
-      driverRef.current.drive();
+    // Solo manejar estados de finalización - dejar que Joyride maneje el progreso automáticamente
+    if (status === "finished" || status === "skipped") {
+      // Marcar el tour como completado
+      localStorage.setItem(TOUR_COMPLETED_KEY, "true");
+      stopTour();
     }
   };
 
@@ -68,12 +31,15 @@ export const useTour = (
 
   const resetTour = () => {
     localStorage.removeItem(TOUR_COMPLETED_KEY);
+    stopTour();
   };
 
   return {
+    run,
     startTour,
+    stopTour,
+    handleJoyrideCallback,
     hasCompletedTour,
     resetTour,
-    isTourActive,
   };
 };
