@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { HelpCircle, CheckCircle2, CloudUpload } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { CheckCircle2, CloudUpload } from "lucide-react";
 import { EditorToolbar } from "@/components/EditorToolbar";
 import { useUIStore } from "@/stores/uiStore";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -128,7 +122,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           </div>
         )}
 
-        {!isMobile && (
+        {/* DESHABILITADO: El tour no está funcionando correctamente */}
+        {/* {!isMobile && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -144,7 +139,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
               <p>Ver tour de bienvenida</p>
             </TooltipContent>
           </Tooltip>
-        )}
+        )} */}
       </div>
     </header>
   );

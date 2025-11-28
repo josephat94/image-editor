@@ -13,7 +13,6 @@ import { usePasteImage } from "@/hooks/usePasteImage";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { useUIStore } from "@/stores/uiStore";
-import { TOUR_STEPS } from "@/constants/tourSteps";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { cn } from "@/lib/utils";
@@ -132,20 +131,22 @@ const ImageEditorContent: React.FC = () => {
   }, [isRemovingBg]);
 
   // Iniciar el tour automáticamente si es la primera vez
-  useEffect(() => {
-    if (isReady && !hasCompletedTour()) {
-      setTimeout(() => {
-        startTour(TOUR_STEPS);
-      }, 500);
-    }
-  }, [isReady, hasCompletedTour, startTour]);
+  // DESHABILITADO: El tour no está funcionando correctamente
+  // useEffect(() => {
+  //   if (isReady && !hasCompletedTour()) {
+  //     setTimeout(() => {
+  //       startTour(TOUR_STEPS);
+  //     }, 500);
+  //   }
+  // }, [isReady, hasCompletedTour, startTour]);
 
   // El hook useWhatsNew ya maneja la lógica de mostrar el modal solo una vez
   // Se mostrará automáticamente después de 1 segundo si no se ha visto antes
 
   // Función para reiniciar el tour manualmente
+  // DESHABILITADO: El tour no está funcionando correctamente
   const handleRestartTour = () => {
-    startTour(TOUR_STEPS);
+    // startTour(TOUR_STEPS);
   };
 
   return (
