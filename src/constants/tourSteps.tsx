@@ -1,176 +1,103 @@
-import type { Step } from "react-joyride";
+// Tipo para los pasos del tour de Driver.js
+export interface TourStep {
+  element?: string;
+  popover: {
+    title: string;
+    description: string;
+    side?: "top" | "right" | "bottom" | "left";
+    align?: "start" | "center" | "end";
+  };
+}
 
-export const TOUR_STEPS: Step[] = [
+export const TOUR_STEPS: TourStep[] = [
   {
-    target: "#editor-header",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          ¡Bienvenido a QuickSnap! 🎨
-        </h3>
-        <p className="text-gray-300">
-          Esta es una herramienta profesional para editar y anotar imágenes. Te
-          guiaré por las funciones principales en unos segundos.
-        </p>
-      </div>
-    ),
-    placement: "bottom",
-    disableBeacon: true,
+    element: "#editor-header",
+    popover: {
+      title: "¡Bienvenido a QuickSnap! 🎨",
+      description:
+        "Esta es una herramienta profesional para editar y anotar imágenes. Te guiaré por las funciones principales en unos segundos.",
+      side: "bottom",
+      align: "start",
+    },
   },
   {
-    target: "#file-upload-section",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          Cargar Imágenes 📁
-        </h3>
-        <p className="text-gray-300">
-          Puedes subir una imagen haciendo clic aquí o simplemente pegándola con{" "}
-          <strong>Cmd+V</strong> (o Ctrl+V en Windows).
-          <br />
-          <br />
-          <strong>✨ Mágico:</strong> Al cargar una imagen, sus colores
-          principales se extraerán automáticamente y se agregarán a tu paleta de
-          colores.
-        </p>
-      </div>
-    ),
-    placement: "bottom",
-    disableBeacon: true,
+    element: "#file-upload-section",
+    popover: {
+      title: "Cargar Imágenes 📁",
+      description:
+        "Puedes subir una imagen haciendo clic aquí o simplemente pegándola con Cmd+V (o Ctrl+V en Windows).\n\n✨ Mágico: Al cargar una imagen, sus colores principales se extraerán automáticamente y se agregarán a tu paleta de colores.",
+      side: "bottom",
+      align: "start",
+    },
   },
   {
-    target: "#tools-section",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          Herramientas de Anotación ✏️
-        </h3>
-        <p className="text-gray-300">
-          Aquí encontrarás todas las herramientas: flechas, formas, texto,
-          censura y anotaciones numeradas. Cada herramienta tiene un atajo de
-          teclado para trabajar más rápido.
-        </p>
-      </div>
-    ),
-    placement: "bottom",
-    disableBeacon: true,
+    element: "#tools-section",
+    popover: {
+      title: "Herramientas de Anotación ✏️",
+      description:
+        "Aquí encontrarás todas las herramientas: flechas, formas, texto, censura y anotaciones numeradas. Cada herramienta tiene un atajo de teclado para trabajar más rápido.",
+      side: "bottom",
+      align: "start",
+    },
   },
   {
-    target: "#color-selector",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          Selector de Colores 🎨
-        </h3>
-        <p className="text-gray-300">
-          Elige el color que quieres usar para tus anotaciones y elementos. El
-          color se aplicará a flechas, formas, texto y más.
-          <br />
-          <br />
-          <strong>✨ Tip:</strong> Cuando cargues una imagen, sus colores
-          principales se extraerán automáticamente y se agregarán a esta paleta
-          para que puedas usarlos en tus anotaciones.
-        </p>
-      </div>
-    ),
-    placement: "right",
-    disableBeacon: true,
+    element: "#color-selector",
+    popover: {
+      title: "Selector de Colores 🎨",
+      description:
+        "Elige el color que quieres usar para tus anotaciones y elementos. El color se aplicará a flechas, formas, texto y más.\n\n✨ Tip: Cuando cargues una imagen, sus colores principales se extraerán automáticamente y se agregarán a esta paleta para que puedas usarlos en tus anotaciones.",
+      side: "right",
+      align: "start",
+    },
   },
   {
-    target: "#annotation-counter",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          Anotaciones Numeradas 🔢
-        </h3>
-        <p className="text-gray-300">
-          Crea anotaciones numeradas secuencialmente. Perfecto para tutoriales y
-          guías paso a paso. Presiona <strong>N</strong> para agregar una
-          anotación numerada.
-        </p>
-      </div>
-    ),
-    placement: "right",
-    disableBeacon: true,
+    element: "#annotation-counter",
+    popover: {
+      title: "Anotaciones Numeradas 🔢",
+      description:
+        "Crea anotaciones numeradas secuencialmente. Perfecto para tutoriales y guías paso a paso. Presiona N para agregar una anotación numerada.",
+      side: "right",
+      align: "start",
+    },
   },
   {
-    target: "#layers-panel",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          Panel de Capas 📚
-        </h3>
-        <p className="text-gray-300">
-          Gestiona el orden de tus elementos con <strong>drag and drop</strong>{" "}
-          arrastrando el ícono de agarre. También puedes usar <strong>[</strong>{" "}
-          y <strong>]</strong> para mover capas, o <strong>Ctrl+[</strong> y{" "}
-          <strong>Ctrl+]</strong> para enviar al fondo/traer al frente.
-        </p>
-      </div>
-    ),
-    placement: "right",
-    disableBeacon: true,
+    element: "#layers-panel",
+    popover: {
+      title: "Panel de Capas 📚",
+      description:
+        "Gestiona el orden de tus elementos con drag and drop arrastrando el ícono de agarre. También puedes usar [ y ] para mover capas, o Ctrl+[ y Ctrl+] para enviar al fondo/traer al frente.",
+      side: "right",
+      align: "start",
+    },
   },
   {
-    target: "#background-selector",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          Fondo del Canvas 🖼️
-        </h3>
-        <p className="text-gray-300">
-          Elige el color de fondo para tu canvas. Puedes elegir entre blanco,
-          negro, o el color <strong>vibrant</strong> extraído automáticamente de
-          tu imagen (si está disponible). El fondo se actualiza automáticamente
-          cuando cargas una imagen.
-        </p>
-      </div>
-    ),
-    placement: "center",
-    disableBeacon: true,
-    disableScrolling: true,
+    element: "#background-selector",
+    popover: {
+      title: "Fondo del Canvas 🖼️",
+      description:
+        "Elige el color de fondo para tu canvas. Puedes elegir entre blanco, negro, o el color vibrant extraído automáticamente de tu imagen (si está disponible). El fondo se actualiza automáticamente cuando cargas una imagen.",
+      side: "top",
+      align: "center",
+    },
   },
   {
-    target: "#actions-section",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          Exportar tu Trabajo 💾
-        </h3>
-        <p className="text-gray-300">
-          Cuando termines, puedes copiar al portapapeles o descargar tu imagen.
-          ¡También puedes limpiar todo para empezar de nuevo!
-        </p>
-      </div>
-    ),
-    placement: "bottom",
-    disableBeacon: true,
+    element: "#actions-section",
+    popover: {
+      title: "Exportar tu Trabajo 💾",
+      description:
+        "Cuando termines, puedes copiar al portapapeles o descargar tu imagen. ¡También puedes limpiar todo para empezar de nuevo!",
+      side: "bottom",
+      align: "start",
+    },
   },
   {
-    target: "body",
-    content: (
-      <div>
-        <h3 className="text-lg font-semibold text-white mb-2">
-          ¡Listo para empezar! 🚀
-        </h3>
-        <p className="text-gray-300">
-          Usa los atajos de teclado para trabajar más rápido:
-          <br />
-          <br />• <strong>T</strong> - Añadir texto
-          <br />• <strong>A</strong> - Flecha
-          <br />• <strong>R</strong> - Rectángulo
-          <br />• <strong>C</strong> - Círculo
-          <br />• <strong>B</strong> - Censurar
-          <br />• <strong>N</strong> - Anotación numerada
-          <br />• <strong>Ctrl+Z</strong> - Deshacer
-          <br />• <strong>Ctrl+Shift+Z</strong> - Rehacer
-          <br />• <strong>Delete</strong> - Eliminar selección
-          <br />• <strong>Rueda del mouse</strong> - Zoom in/out
-        </p>
-      </div>
-    ),
-    placement: "center",
-    disableBeacon: true,
-    disableOverlayClose: true,
+    element: "body",
+    popover: {
+      title: "¡Listo para empezar! 🚀",
+      description:
+        "Usa los atajos de teclado para trabajar más rápido:\n\n• T - Añadir texto\n• A - Flecha\n• R - Rectángulo\n• C - Círculo\n• B - Censurar\n• N - Anotación numerada\n• Ctrl+Z - Deshacer\n• Ctrl+Shift+Z - Rehacer\n• Delete - Eliminar selección\n• Rueda del mouse - Zoom in/out",
+      side: "top",
+      align: "center",
+    },
   },
 ];

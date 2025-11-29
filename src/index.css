@@ -203,34 +203,3 @@ body>.driver-popover {
 body>.driver-popover {
   z-index: 10000 !important;
 }
-
-/* Estilos para React Joyride - Spotlight visible */
-.react-joyride__spotlight {
-  border: 3px solid rgb(59, 130, 246) !important;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7),
-    0 0 20px rgba(59, 130, 246, 0.5) !important;
-  border-radius: 0.5rem !important;
-  background: transparent !important;
-}
-
-.react-joyride__overlay {
-  background-color: rgba(0, 0, 0, 0.7) !important;
-  mix-blend-mode: normal !important;
-}
-
-/* Asegurar que el elemento resaltado sea visible */
-[data-joyride="spotlight"] {
-  border: 3px solid rgb(59, 130, 246) !important;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7),
-    0 0 20px rgba(59, 130, 246, 0.5) !important;
-  border-radius: 0.5rem !important;
-  background: transparent !important;
-  z-index: 9999 !important;
-  position: relative !important;
-}
-
-/* Asegurar que el elemento target sea visible sobre el overlay */
-.react-joyride__target {
-  position: relative !important;
-  z-index: 10001 !important;
-}

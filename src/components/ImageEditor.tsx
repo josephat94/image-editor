@@ -18,7 +18,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { cn } from "@/lib/utils";
 import { WhatsNewModal } from "@/components/WhatsNewModal";
-import Joyride from "react-joyride";
 
 const ImageEditorContent: React.FC = () => {
   const { isReady, addImage, removeImageBackground } = useCanvasContext();
@@ -58,7 +57,7 @@ const ImageEditorContent: React.FC = () => {
     return () => clearInterval(interval);
   }, [lastSaved]);
 
-  const { run, startTour, handleJoyrideCallback, hasCompletedTour } = useTour();
+  const { startTour, hasCompletedTour } = useTour();
   const { showModal, handleClose } = useWhatsNew();
 
   // Manejar pegar imagen con Cmd+V
@@ -134,9 +133,22 @@ const ImageEditorContent: React.FC = () => {
   // Iniciar el tour automáticamente si es la primera vez
   useEffect(() => {
     if (isReady && !hasCompletedTour()) {
-      setTimeout(() => {
-        startTour(TOUR_STEPS);
-      }, 500);
+      // Esperar más tiempo para asegurar que todos los elementos estén en el DOM
+      const timer = setTimeout(() => {
+        // Verificar que al menos el primer elemento existe antes de iniciar
+        const firstElement = document.querySelector("#editor-header");
+        if (firstElement) {
+          startTour(TOUR_STEPS);
+        } else {
+          console.warn("Tour elements not ready, retrying...");
+          // Reintentar después de un segundo más
+          setTimeout(() => {
+            startTour(TOUR_STEPS);
+          }, 1000);
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
     }
   }, [isReady, hasCompletedTour, startTour]);
 
@@ -243,80 +255,6 @@ const ImageEditorContent: React.FC = () => {
 
       {/* Modal de Novedades */}
       <WhatsNewModal open={showModal} onOpenChange={handleClose} />
-
-      {/* Tour con React Joyride */}
-      <Joyride
-        steps={TOUR_STEPS}
-        run={run}
-        continuous
-        showProgress
-        showSkipButton
-        disableOverlayClose={false}
-        disableScrolling
-        disableScrollParentFix
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            primaryColor: "#3b82f6",
-            zIndex: 10000,
-            arrowColor: "rgb(31, 41, 55)",
-          },
-          tooltip: {
-            backgroundColor: "rgb(31, 41, 55)",
-            color: "rgb(229, 231, 235)",
-            borderRadius: "0.5rem",
-            border: "1px solid rgb(75, 85, 99)",
-            padding: "1.5rem",
-          },
-          tooltipTitle: {
-            color: "rgb(255, 255, 255)",
-            fontSize: "1.125rem",
-            fontWeight: 600,
-            marginBottom: "0.5rem",
-          },
-          tooltipContent: {
-            color: "rgb(209, 213, 219)",
-            fontSize: "0.9375rem",
-            lineHeight: 1.5,
-            padding: 0,
-          },
-          buttonNext: {
-            backgroundColor: "rgb(59, 130, 246)",
-            color: "white",
-            borderRadius: "0.375rem",
-            padding: "0.5rem 1rem",
-            fontSize: "0.875rem",
-            fontWeight: 500,
-            border: "none",
-          },
-          buttonBack: {
-            color: "rgb(209, 213, 219)",
-            marginRight: "0.5rem",
-            fontSize: "0.875rem",
-          },
-          buttonSkip: {
-            color: "rgb(156, 163, 175)",
-            fontSize: "0.875rem",
-          },
-          overlay: {
-            backgroundColor: "rgba(0, 0, 0, 0.7)",
-            mixBlendMode: "normal",
-          },
-          spotlight: {
-            borderRadius: "0.5rem",
-            border: "3px solid rgb(59, 130, 246)",
-            boxShadow:
-              "0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.5)",
-          },
-        }}
-        locale={{
-          back: "← Anterior",
-          close: "Cerrar",
-          last: "¡Empezar! 🚀",
-          next: "Siguiente →",
-          skip: "Saltar",
-        }}
-      />
     </TooltipProvider>
   );
 };
