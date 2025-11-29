@@ -11,13 +11,13 @@ import { CanvasProvider, useCanvasContext } from "@/contexts/CanvasContext";
 import { useTour } from "@/hooks/useTour";
 import { usePasteImage } from "@/hooks/usePasteImage";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useWhatsNew } from "@/hooks/useWhatsNew";
+// import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { useUIStore } from "@/stores/uiStore";
 import { TOUR_STEPS } from "@/constants/tourSteps";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsLaptop } from "@/hooks/use-is-laptop";
 import { cn } from "@/lib/utils";
-import { WhatsNewModal } from "@/components/WhatsNewModal";
+// import { WhatsNewModal } from "@/components/WhatsNewModal";
 
 const ImageEditorContent: React.FC = () => {
   const { isReady, addImage, removeImageBackground } = useCanvasContext();
@@ -58,7 +58,7 @@ const ImageEditorContent: React.FC = () => {
   }, [lastSaved]);
 
   const { startTour, hasCompletedTour } = useTour();
-  const { showModal, handleClose } = useWhatsNew();
+  // const { showModal, handleClose } = useWhatsNew();
 
   // Manejar pegar imagen con Cmd+V
   usePasteImage();
@@ -253,8 +253,8 @@ const ImageEditorContent: React.FC = () => {
         </SidebarInset>
       </div>
 
-      {/* Modal de Novedades */}
-      <WhatsNewModal open={showModal} onOpenChange={handleClose} />
+      {/* Modal de Novedades - Desactivado temporalmente */}
+      {/* <WhatsNewModal open={showModal} onOpenChange={handleClose} /> */}
     </TooltipProvider>
   );
 };
