@@ -26,6 +26,7 @@
     "fabric": "^5.3.0",
     "lucide-react": "^0.460.0",
     "node-vibrant": "^4.0.3",
+    "onnxruntime-web": "^1.21.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tailwind-merge": "^2.6.0",
