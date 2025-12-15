@@ -1818,13 +1818,17 @@ export const useCanvas = () => {
   const addArrow = () => {
     if (!fabricCanvasRef.current) return;
 
+    const canvas = fabricCanvasRef.current;
+    // Deseleccionar cualquier elemento previamente seleccionado
+    canvas.discardActiveObject();
+    canvas.renderAll();
+
     lastActionRef.current = "arrow"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
     // Desactivar modo texto si está activo
     if (isTextMode) {
       setIsTextMode(false);
-      const canvas = fabricCanvasRef.current;
       canvas.defaultCursor = "default";
       canvas.hoverCursor = "move";
       canvas.selection = true;
@@ -1832,7 +1836,6 @@ export const useCanvas = () => {
 
     // Activar el modo de dibujo de flechas
     setIsArrowMode(true);
-    const canvas = fabricCanvasRef.current;
 
     // Desactivar la selección de objetos mientras se dibuja
     canvas.selection = false;
@@ -1853,8 +1856,11 @@ export const useCanvas = () => {
   ) => {
     if (!fabricCanvasRef.current) return;
 
-    lastActionRef.current = "text";
     const canvas = fabricCanvasRef.current;
+    // Deseleccionar cualquier elemento previamente seleccionado
+    canvas.discardActiveObject();
+
+    lastActionRef.current = "text";
 
     // Usar IText para edición inline
     const textObj = new fabric.IText(initialText || "Escribe aquí...", {
@@ -1894,16 +1900,17 @@ export const useCanvas = () => {
   const addText = (text: string) => {
     if (!fabricCanvasRef.current) return;
 
+    const canvas = fabricCanvasRef.current;
     // Si hay un objeto seleccionado y es texto, reemplazarlo
-    const activeObject = fabricCanvasRef.current.getActiveObject();
+    const activeObject = canvas.getActiveObject();
     if (activeObject && activeObject.type === "i-text") {
       (activeObject as fabric.IText).set("text", text);
-      fabricCanvasRef.current.renderAll();
+      canvas.renderAll();
       return;
     }
 
-    // Si no, crear nuevo texto en el centro
-    const canvas = fabricCanvasRef.current;
+    // Si no, deseleccionar cualquier elemento y crear nuevo texto en el centro
+    canvas.discardActiveObject();
     const centerX = canvas.width! / 2;
     const centerY = canvas.height! / 2;
     createTextAtPosition(centerX, centerY, text);
@@ -1912,13 +1919,17 @@ export const useCanvas = () => {
   const addRectangle = () => {
     if (!fabricCanvasRef.current) return;
 
+    const canvas = fabricCanvasRef.current;
+    // Deseleccionar cualquier elemento previamente seleccionado
+    canvas.discardActiveObject();
+    canvas.renderAll();
+
     lastActionRef.current = "rectangle"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
     // Desactivar modo texto si está activo
     if (isTextMode) {
       setIsTextMode(false);
-      const canvas = fabricCanvasRef.current;
       canvas.defaultCursor = "default";
       canvas.hoverCursor = "move";
       canvas.selection = true;
@@ -1926,7 +1937,6 @@ export const useCanvas = () => {
 
     // Activar el modo de dibujo de rectángulos
     setIsRectangleMode(true);
-    const canvas = fabricCanvasRef.current;
 
     // Desactivar la selección de objetos mientras se dibuja
     canvas.selection = false;
@@ -1942,13 +1952,17 @@ export const useCanvas = () => {
   const addCircle = () => {
     if (!fabricCanvasRef.current) return;
 
+    const canvas = fabricCanvasRef.current;
+    // Deseleccionar cualquier elemento previamente seleccionado
+    canvas.discardActiveObject();
+    canvas.renderAll();
+
     lastActionRef.current = "circle"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
     // Desactivar modo texto si está activo
     if (isTextMode) {
       setIsTextMode(false);
-      const canvas = fabricCanvasRef.current;
       canvas.defaultCursor = "default";
       canvas.hoverCursor = "move";
       canvas.selection = true;
@@ -1956,7 +1970,6 @@ export const useCanvas = () => {
 
     // Activar el modo de dibujo de círculos
     setIsCircleMode(true);
-    const canvas = fabricCanvasRef.current;
 
     // Desactivar la selección de objetos mientras se dibuja
     canvas.selection = false;
@@ -1972,13 +1985,17 @@ export const useCanvas = () => {
   const addBlurBox = () => {
     if (!fabricCanvasRef.current) return;
 
+    const canvas = fabricCanvasRef.current;
+    // Deseleccionar cualquier elemento previamente seleccionado
+    canvas.discardActiveObject();
+    canvas.renderAll();
+
     lastActionRef.current = "blur"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
     // Desactivar modo texto si está activo
     if (isTextMode) {
       setIsTextMode(false);
-      const canvas = fabricCanvasRef.current;
       canvas.defaultCursor = "default";
       canvas.hoverCursor = "move";
       canvas.selection = true;
@@ -1986,7 +2003,6 @@ export const useCanvas = () => {
 
     // Activar el modo de dibujo de blur
     setIsBlurMode(true);
-    const canvas = fabricCanvasRef.current;
 
     // Desactivar la selección de objetos mientras se dibuja
     canvas.selection = false;
@@ -2002,13 +2018,17 @@ export const useCanvas = () => {
   const addMagnifier = () => {
     if (!fabricCanvasRef.current) return;
 
+    const canvas = fabricCanvasRef.current;
+    // Deseleccionar cualquier elemento previamente seleccionado
+    canvas.discardActiveObject();
+    canvas.renderAll();
+
     lastActionRef.current = "magnifier"; // Trackear tipo de acción
     isDrawingModeRef.current = true; // Activar flag para ignorar eliminaciones temporales
 
     // Desactivar modo texto si está activo
     if (isTextMode) {
       setIsTextMode(false);
-      const canvas = fabricCanvasRef.current;
       canvas.defaultCursor = "default";
       canvas.hoverCursor = "move";
       canvas.selection = true;
@@ -2016,7 +2036,6 @@ export const useCanvas = () => {
 
     // Activar el modo de dibujo de lupa
     setIsMagnifierMode(true);
-    const canvas = fabricCanvasRef.current;
 
     // Desactivar la selección de objetos mientras se dibuja
     canvas.selection = false;
@@ -2032,8 +2051,12 @@ export const useCanvas = () => {
   const addNumberedAnnotation = () => {
     if (!fabricCanvasRef.current) return;
 
-    lastActionRef.current = "annotation"; // Trackear tipo de acción
     const canvas = fabricCanvasRef.current;
+    // Deseleccionar cualquier elemento previamente seleccionado
+    canvas.discardActiveObject();
+    canvas.renderAll();
+
+    lastActionRef.current = "annotation"; // Trackear tipo de acción
 
     const radius = 30;
 
@@ -2568,6 +2591,9 @@ export const useCanvas = () => {
     const canvas = fabricCanvasRef.current;
 
     if (!isTextMode) {
+      // Deseleccionar cualquier elemento previamente seleccionado al activar modo texto
+      canvas.discardActiveObject();
+      canvas.renderAll();
       // Activar modo texto
       canvas.defaultCursor = "text";
       canvas.hoverCursor = "text";
